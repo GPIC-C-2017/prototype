@@ -20,8 +20,10 @@ public class DrivingAgent : MonoBehaviour {
 	public float minimumFrontDistance = 1f;
 	public float frontDistancePerSpeed = .5f;
 
+	private Vector3 currentTarget;
+
 	public void SetNextTarget(Vector3 target) {
-		// TODO
+		currentTarget = target;
 	}
 
 	private VehicleAgent vehicle;
@@ -37,18 +39,22 @@ public class DrivingAgent : MonoBehaviour {
 
 		if (vehicle.IsMoving ()) {
 
+			// Acceleration
+
 			if (ObstaclePresentInFront ()) {
-				Debug.Log ("Obstacle detected! Braking.");
+				//Debug.Log ("Obstacle detected! Braking.");
 				vehicle.Brake ();
 
 			} else if (NeedsAcceleration ()) {
-				Debug.Log("Way is clear. Accelerating...");
+				//Debug.Log("Way is clear. Accelerating...");
 				vehicle.Accelerate ();
 
 			} else {
 				// Coast...
 
 			}
+				
+			SteerTowardsTarget ();
 
 		} else {
 
@@ -71,7 +77,7 @@ public class DrivingAgent : MonoBehaviour {
 	// Checks whether there is an obstacle in front of the vehicle at an optimal distance (based on current speed)
 	private bool ObstaclePresentInFront() {
 		float distance = minimumFrontDistance + (frontDistancePerSpeed * vehicle.GetCurrentSpeed());
-		Debug.Log ("Current speed is " + vehicle.GetCurrentSpeed ().ToString() + ", Front distance is " + distance.ToString ());
+		// Debug.Log ("Current speed is " + vehicle.GetCurrentSpeed ().ToString() + ", Front distance is " + distance.ToString ());
 		return ObstaclePresentAtDistance (distance);
 	}
 
@@ -80,7 +86,26 @@ public class DrivingAgent : MonoBehaviour {
 	}
 		
 	private bool IsMoving() {
-		return Mathf.Abs (vehicle.GetCurrentSpeed ()) > 0;
+		return (Mathf.Abs (vehicle.GetCurrentSpeed ()) > 0);
+	}
+
+	private Vector3 NeededSteeringDirection() {
+		Vector3 relativePoint = gameObject.transform.InverseTransformPoint (currentTarget);
+		if (relativePoint.x > 0) {
+			return Vector3.right;
+		} else if (relativePoint.x < 0) {
+			return Vector3.left;
+		} else {
+			return Vector3.zero;
+		}		
+	}
+
+	private void SteerTowardsTarget() {
+		if (NeededSteeringDirection () == Vector3.right) {
+			vehicle.SteerRight ();
+		} else if (NeededSteeringDirection () == Vector3.left) {
+			vehicle.SteerLeft ();
+		}
 	}
 
 
