@@ -54,6 +54,10 @@ public class VehicleAgent : MonoBehaviour {
 		return Vector3.Dot (rb.velocity, gameObject.transform.forward);
 	}
 
+	public bool IsMoving() {
+		return Mathf.Abs(GetCurrentSpeed()) > 0;
+	}
+
 	// MonoBehaviour methods
 
 	void Start () {
