@@ -8,33 +8,113 @@ using UnityEngine;
  * These methods are meant to be used to higher-level agents (i.e. the Autonomous Driving
  *  Agent) to control the vehicle.
  */
+[RequireComponent (typeof (Rigidbody))]
 public class VehicleAgent : MonoBehaviour {
 
+	// Public variables
+
+	[Range (10.0f, 100.0f)]
+	public float maximumVehicleSpeed = 85.0f;
+
+	[Range (0.05f, 1.0f)]
+	public float steeringResponsiveness = 0.65f;
+
+	[Range (10.0f, 1000.0f)]
+	public float maxSteeringTorque = 800.0f;
+
+	[Range (700.0f, 1100.0f)]
+	public float minimumVehicleTorque = 750.0f;
+
+	[Range (1100.0f, 5000.0f)]
+	public float maximumVehicleTorque = 1100.0f;
+
+
+	// Public Methods 
+
 	public void Accelerate() {
-		// TODO
+		Vector3 forceVector = gameObject.transform.forward * GetVehicleAcceleration() * Time.deltaTime;
+		rb.AddForce (forceVector);
 	}
 
 	public void Brake() {
-		// TODO
+		Vector3 forceVector = -gameObject.transform.forward * GetVehicleAcceleration() * Time.deltaTime;
+		rb.AddForce (forceVector);
+
+	}	
+
+	public void SteerRight() {
+		Steer (Vector3.up);
 	}
 
 	public void SteerLeft() {
-		// TODO
+		Steer (Vector3.down);
 	}
 
-	public void SteerRight() {
-		// TODO
+	public float GetCurrentSpeed() {
+		return Vector3.Dot (rb.velocity, gameObject.transform.forward);
 	}
 
-	// Use this for initialization
+	// MonoBehaviour methods
+
 	void Start () {
-		
+		rb = gameObject.GetComponent<Rigidbody> ();
 	}
-	
-	// Update is called once per frame
+
 	void Update () {
-		
+
 	}
+
+	// Private variables and methods
+
+	private Rigidbody rb;
+
+	private void Steer(Vector3 direction) {
+		Vector3 torqueVector = direction * GetVehicleSteeringTorque () * Time.deltaTime;
+		rb.AddRelativeTorque (torqueVector);
+	}
+
+	/**
+	 * Bell curve, give most power at medium speed
+	 */
+	private float AccelerationCurveFunction(float speedRatio) {
+		if (speedRatio < 0) {
+			speedRatio = 0f;
+		} else if (speedRatio > 1) {
+			speedRatio = 1f;
+		}
+		return (Mathf.Sin(2f * Mathf.PI * (speedRatio - 1f/4f)) + 1f) / 2f;
+	}
+
+	private float GetVehicleAcceleration() {
+		float speedRatio = GetCurrentAdirectionalSpeed() / maximumVehicleSpeed;
+		float curveResult = AccelerationCurveFunction (speedRatio);
+		float outputTorque = curveResult * maximumVehicleTorque;
+		outputTorque = Mathf.Max (minimumVehicleTorque, outputTorque);
+		return outputTorque;
+	}
+
+	private float GetCurrentAdirectionalSpeed() {
+		return Mathf.Abs (GetCurrentSpeed ());
+	}
+
+	/**
+	 * e^(-x), steer well at very low speeds, slowly at high speeds
+	 */
+	private float SteeringTorqueCurveFunction(float speedRatio) {
+		return Mathf.Exp (-speedRatio);
+	}
+
+	public float GetVehicleSteeringTorque() {
+		if (GetCurrentAdirectionalSpeed () == 0) {
+			return 0;
+		}
+
+		float speedRatio = GetCurrentAdirectionalSpeed() / maximumVehicleSpeed;
+		float curveResult = SteeringTorqueCurveFunction (speedRatio);
+		float outputTorque = curveResult * steeringResponsiveness * maxSteeringTorque;
+		return outputTorque;
+	}
+
 
 
 }
