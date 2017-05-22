@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 [RequireComponent(typeof(TrafficControllerAgent))]
@@ -8,19 +9,6 @@ public class WaypointEditor : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-    }
-
-    void OnDrawGizmosSelected() {
-        Gizmos.color = Color.red;
-
-        // go through children
-        foreach (Transform child in transform) {
-            Gizmos.DrawCube(child.position, new Vector3(0.5f, 0.5f, 0.5f));
-            var waypointObj = child.GetComponent<Waypoint>();
-            foreach (var neighbour in waypointObj.Neighbours) {
-                Gizmos.DrawLine(child.position, neighbour ? neighbour.transform.position : Vector3.zero);
-            }
-        }
     }
 }
 
@@ -36,12 +24,14 @@ public class WaypointEditorExt : Editor {
 
     void OnSceneGUI() {
         if (!editor.EditMode) return;
-
+        
         Event e = Event.current;
-        if (e.type == EventType.KeyDown && e.keyCode == KeyCode.K) {
-            RaycastHit hit;
-            if (MouseToScene(e, out hit)) {
-                CreateWaypoint(hit.point);
+        if (e.type == EventType.KeyDown) {
+            if (e.keyCode == KeyCode.K) {
+                RaycastHit hit;
+                if (MouseToScene(e, out hit)) {
+                    CreateWaypoint(hit.point);
+                }
             }
         }
     }
@@ -58,16 +48,4 @@ public class WaypointEditorExt : Editor {
         var obj = Instantiate(waypointPrefab, pos, Quaternion.identity, editor.transform);
         obj.name = "Waypoint";
     }
-
-//	public override void OnInspectorGUI()
-//	{
-//		EditorGUILayout.BeginHorizontal();
-//		{
-//			EditorGUILayout.LabelField("Status: " + (EditEnabled ? "Active" : "Disabled"));
-//			if (GUILayout.Button("Active"))
-//				EditEnabled = !EditEnabled;
-//		}
-//		EditorGUILayout.EndHorizontal();
-//
-//	}
 }
