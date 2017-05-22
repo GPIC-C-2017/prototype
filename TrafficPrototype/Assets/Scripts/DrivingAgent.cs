@@ -20,6 +20,8 @@ public class DrivingAgent : MonoBehaviour {
 	public float minimumFrontDistance = 1f;
 	public float frontDistancePerSpeed = .5f;
 
+	public bool enableCollaborationFeatures = true;
+
 	private Vector3 currentTarget;
 
 	public void SetNextTarget(Vector3 target) {
@@ -69,20 +71,44 @@ public class DrivingAgent : MonoBehaviour {
 
 	// Checks whether there is an obstacle in front of the vehicle or not at a specific distance
 	private bool ObstaclePresentAtDistance(float distance) {
+		
 		Vector3 forward = gameObject.transform.TransformVector(Vector3.forward);
 		Debug.DrawRay (gameObject.transform.position, forward * distance, Color.red, 0.05f, false);
-		return Physics.Raycast (gameObject.transform.position, forward, distance);
-	}
+		RaycastHit hit;
+
+        // 
+		bool isPresent = Physics.Raycast (gameObject.transform.position, forward, out hit, distance);
+		if (!enableCollaborationFeatures || !isPresent) {
+			return isPresent;
+		}
+
+		float obstacleDistance = hit.distance;
+		GameObject obstacle = hit.collider.gameObject;
+
+		bool isVehicle = obstacle.GetComponent<DrivingAgent>() != null;
+        if (!isVehicle) {
+            return isPresent;
+        }
+
+        float otherDistance = obstacle.GetComponent<DrivingAgent>().GetOptimalFrontDistance();
+        float distanceToFrontVehicle = (distance - otherDistance) + minimumFrontDistance;
+        return hit.distance < distanceToFrontVehicle;
+
+    }
 
 	// Checks whether there is an obstacle in front of the vehicle at an optimal distance (based on current speed)
 	private bool ObstaclePresentInFront() {
-		float distance = minimumFrontDistance + (frontDistancePerSpeed * vehicle.GetCurrentSpeed());
-		// Debug.Log ("Current speed is " + vehicle.GetCurrentSpeed ().ToString() + ", Front distance is " + distance.ToString ());
+        float distance = GetOptimalFrontDistance();
 		return ObstaclePresentAtDistance (distance);
 	}
 
+    public float GetOptimalFrontDistance()
+    {
+        return minimumFrontDistance + (frontDistancePerSpeed * vehicle.GetCurrentSpeed());
+    }
+
 	private bool NeedsAcceleration() {
-		return true;
+		return currentTarget != null;
 	}
 		
 	private bool IsMoving() {
