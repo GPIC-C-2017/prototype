@@ -48,11 +48,11 @@ public class WaypointExt : Editor {
     void OnSceneGUI() {
         Event e = Event.current;
         if (e.type == EventType.KeyDown) {
-            if (Selection.gameObjects.Length > 0 && e.keyCode == KeyCode.C) {
+            if (Selection.gameObjects.Length > 0 && e.keyCode == KeyCode.Slash) {
                 ConnectWaypoints();
             }
 
-            if (Selection.gameObjects.Length > 0 && e.keyCode == KeyCode.D) {
+            if (Selection.gameObjects.Length > 0 && e.keyCode == KeyCode.Backslash) {
                 DisconnectWaypoints();
             }
         }
