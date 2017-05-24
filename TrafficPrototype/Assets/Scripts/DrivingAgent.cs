@@ -13,8 +13,8 @@ using UnityEngine;
  * - Change lanes and behave appropriately with regards to nearby pods
  * - Report permanent obstructions to the NavigationAgent (i.e. to request for a new target)
  **/
-[RequireComponent (typeof (VehicleAgent))]
-[RequireComponent (typeof (NavigationAgent))]
+[RequireComponent(typeof(VehicleAgent))]
+[RequireComponent(typeof(NavigationAgent))]
 public class DrivingAgent : MonoBehaviour {
 
 	public float minimumFrontDistance = 1f;
@@ -135,4 +135,11 @@ public class DrivingAgent : MonoBehaviour {
 	}
 
 
+    private const float DistanceThreshold = .5f;
+    
+
+    public bool ReachedCurrentTarget() {
+        var distance = Vector3.Distance(transform.position, currentTarget);
+        return distance <= DistanceThreshold;
+    }
 }
