@@ -15,7 +15,7 @@ using UnityEngine;
 [RequireComponent(typeof(DrivingAgent))]
 public class NavigationAgent : MonoBehaviour {
     
-    public GameObject destination;
+    public Waypoint Destination;
     public TrafficControllerAgent TCA;
 
     private Waypoint[] path;
@@ -39,14 +39,27 @@ public class NavigationAgent : MonoBehaviour {
         // Request path from the current position, to the destination node.
         // Update inner state, and feed the DrivingAgent with the first junction
         //  of the path.
-        path = TCA.CalculatePath(transform.position, destinationNode.transform.position);
+        var nearbyWaypoints = FindObjectsOfType<Waypoint>();
+        
+        Waypoint closest = nearbyWaypoints[0];
+        var distance = Mathf.Infinity;
+        foreach (var waypoint in nearbyWaypoints) {
+            var diff = transform.position - waypoint.transform.position;
+            var curDistance = diff.sqrMagnitude;
+            if (curDistance < distance) {
+                closest = waypoint;
+                distance = curDistance;
+            }
+        }
+        
+        path = TCA.CalculatePath(closest, destinationNode.GetComponent<Waypoint>());
         NextTarget();
     }
 
     // Use this for initialization
     void Start() {
         DA = GetComponent<DrivingAgent>();
-        if (destination != null) RequestPathTo(destination);
+        StartCoroutine(WaitAndGetPath());
     }
 
     // Update is called once per frame
@@ -59,5 +72,10 @@ public class NavigationAgent : MonoBehaviour {
         Debug.Log("Next Target");
         DA.SetNextTarget(path[0].transform.position);
         path = path.Skip(1).ToArray();
+    }
+
+    IEnumerator WaitAndGetPath() {
+        yield return new WaitForSeconds(0.1f);
+        if (Destination != null) RequestPathTo(Destination.gameObject);
     }
 }

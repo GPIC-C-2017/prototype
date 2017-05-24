@@ -4,30 +4,32 @@ using UnityEngine;
 
 namespace Search {
     public class AStar {
-        public delegate Vector3[] NextLocations(Vector3 current);
+        public delegate Waypoint[] NextLocations(Waypoint current);
 
         private readonly Node startNode;
         private readonly Node endNode;
         private readonly NextLocations adjacentLocations;
-        private readonly Dictionary<Vector3, Node> nodes = new Dictionary<Vector3, Node>();
+        private readonly Dictionary<Waypoint, Node> nodes = new Dictionary<Waypoint, Node>();
 
-        public AStar(Vector3 startLocation, Vector3 endLocation, NextLocations adjacentLocations) {
+        public AStar(Waypoint startLocation, Waypoint endLocation, NextLocations adjacentLocations) {
             startNode = new Node(startLocation, endLocation);
+            nodes[startLocation] = startNode;
             endNode = new Node(endLocation, endLocation);
+            nodes[endLocation] = endNode;
             this.adjacentLocations = adjacentLocations;
         }
 
-        public static List<Vector3> FindPath(Vector3 startNode, Vector3 endNode, NextLocations nextLocations) {
+        public static List<Waypoint> FindPath(Waypoint startNode, Waypoint endNode, NextLocations nextLocations) {
             return new AStar(startNode, endNode, nextLocations).FindPath();
         }
 
-        private List<Vector3> FindPath() {
-            var path = new List<Vector3>();
+        private List<Waypoint> FindPath() {
+            var path = new List<Waypoint>();
             var success = Search(startNode);
             if (success) {
                 var node = endNode;
                 while (node.ParentNode != null) {
-                    path.Add(node.Location);
+                    path.Add(node.Waypoint);
                     node = node.ParentNode;
                 }
                 path.Reverse();
@@ -40,7 +42,7 @@ namespace Search {
             List<Node> nextNodes = GetAdjacentWalkableNodes(currentNode);
             nextNodes.Sort((node1, node2) => node1.F.CompareTo(node2.F));
             foreach (var nextNode in nextNodes) {
-                if (nextNode.Location == endNode.Location) {
+                if (nextNode.Waypoint == endNode.Waypoint) {
                     return true;
                 }
                 if (Search(nextNode)) // Note: Recurses back into Search(Node)
@@ -51,13 +53,13 @@ namespace Search {
 
         private List<Node> GetAdjacentWalkableNodes(Node fromNode) {
             List<Node> walkableNodes = new List<Node>();
-            var nextLocations = adjacentLocations(fromNode.Location);
+            var nextLocations = adjacentLocations(fromNode.Waypoint);
 
             foreach (var location in nextLocations) {
 
                 Node node;
                 if (!nodes.TryGetValue(location, out node)) {
-                    node = new Node(location, endNode.Location);
+                    node = new Node(location, endNode.Waypoint) {ParentNode = fromNode};
                     nodes[location] = node;
                 }
 
@@ -96,6 +98,7 @@ namespace Search {
 
     public class Node {
         public Vector3 Location { get; private set; }
+        public Waypoint Waypoint { get; private set; }
 
         // The length of the path from the start node to this node.
         public float G { get; private set; }
@@ -121,10 +124,11 @@ namespace Search {
             }
         }
         
-        public Node(Vector3 location, Vector3 endLocation) {
-            Location = location;
+        public Node(Waypoint waypoint, Waypoint endWaypoint) {
+            Waypoint = waypoint;
+            Location = waypoint.transform.position;
             State = NodeState.Untested;
-            H = GetTraversalCost(Location, endLocation);
+            H = GetTraversalCost(Location, endWaypoint.transform.position);
             G = 0;
         }
 
