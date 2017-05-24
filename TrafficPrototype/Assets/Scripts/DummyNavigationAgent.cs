@@ -13,7 +13,7 @@ public class DummyNavigationAgent : MonoBehaviour {
 	public GameObject navigationTarget;
 
 	// Use this for initialization
-	void Start () {
+	void Update () {
 
 		gameObject.GetComponent<DrivingAgent> ().SetNextTarget (navigationTarget.transform.position);
 		
