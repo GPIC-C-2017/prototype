@@ -108,7 +108,7 @@ public class DrivingAgent : MonoBehaviour {
     }
 
 	private bool NeedsAcceleration() {
-		return currentTarget != null;
+		return true;
 	}
 		
 	private bool IsMoving() {
@@ -127,10 +127,10 @@ public class DrivingAgent : MonoBehaviour {
 	}
 
 	private void SteerTowardsTarget() {
-		if (NeededSteeringDirection () == Vector3.right) {
-			vehicle.SteerRight ();
-		} else if (NeededSteeringDirection () == Vector3.left) {
+		if (NeededSteeringDirection () == Vector3.left) {
 			vehicle.SteerLeft ();
+		} else if (NeededSteeringDirection () == Vector3.right) {
+			vehicle.SteerRight ();
 		}
 	}
 

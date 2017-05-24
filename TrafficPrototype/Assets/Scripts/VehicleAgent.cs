@@ -19,10 +19,13 @@ public class VehicleAgent : MonoBehaviour {
 	[Range (0.05f, 1.0f)]
 	public float steeringResponsiveness = 0.65f;
 
-	[Range (10.0f, 1000.0f)]
-	public float maxSteeringTorque = 800.0f;
+    [Range(10.0f, 1000.0f)]
+    public float maxSteeringTorque = 800.0f;
 
-	[Range (700.0f, 1100.0f)]
+    [Range(0.5f, 100.0f)]
+    public float minSteeringTorque = 10.0f;
+
+    [Range (700.0f, 1100.0f)]
 	public float minimumVehicleTorque = 750.0f;
 
 	[Range (1100.0f, 5000.0f)]
@@ -115,7 +118,7 @@ public class VehicleAgent : MonoBehaviour {
 
 		float speedRatio = GetCurrentAdirectionalSpeed() / maximumVehicleSpeed;
 		float curveResult = SteeringTorqueCurveFunction (speedRatio);
-		float outputTorque = curveResult * steeringResponsiveness * maxSteeringTorque;
+		float outputTorque = Mathf.Max(curveResult * steeringResponsiveness * maxSteeringTorque, minSteeringTorque);
 		return outputTorque;
 	}
 
