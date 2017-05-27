@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Linq;
 using UnityEngine;
 
@@ -69,7 +67,6 @@ public class NavigationAgent : MonoBehaviour {
 
     // Sets the next target and updates the rest of the path accordingly
     void NextTarget() {
-        Debug.Log("Next Target");
         DA.SetNextTarget(path[0].transform.position);
         path = path.Skip(1).ToArray();
     }
