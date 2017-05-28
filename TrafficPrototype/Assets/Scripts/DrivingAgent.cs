@@ -37,7 +37,7 @@ public class DrivingAgent : MonoBehaviour {
     public const float laneMergingMaxSteeringAngle = 0.30f;
     public Vector3 trafficDirection = Vector3.left;    // Left for UK/Japan traffic, Right for intl.
 
-	private Transform currentTarget;
+	private Vector3 currentTarget;
 
     private const float DistanceThreshold = .5f;
 
@@ -52,17 +52,19 @@ public class DrivingAgent : MonoBehaviour {
     // TODO: temporary public for debugging purposes
     public DrivingAgentState currentState = DrivingAgentState.Driving;
 
-    public void SetNextTarget(Transform target) {
+    public void SetNextTarget(Vector3 target, Vector3 targetDirection) {
 		currentTarget = target;
-	}
+        currentTargetDirection = targetDirection;
+    }
 
     public void SetLane(int lane) {
         currentLane = lane;
     }
 
 	private VehicleAgent vehicle;
+    private Vector3 currentTargetDirection;
 
-	// Use this for initialization
+    // Use this for initialization
 	void Start () {
 		vehicle = gameObject.GetComponent<VehicleAgent> ();
 		
@@ -174,7 +176,7 @@ public class DrivingAgent : MonoBehaviour {
             {
                 // Debug.Log("Lane is free. Steering towards it...");
 
-                Vector3 dir = (GetLaneAdjustedTarget().transform.position - gameObject.transform.position).normalized;
+                Vector3 dir = (GetLaneAdjustedTarget() - gameObject.transform.position).normalized;
                 float currentSteeringAngle = Vector3.Dot(dir, transform.forward);
 
                 // Steer towards lane.
@@ -219,14 +221,15 @@ public class DrivingAgent : MonoBehaviour {
         return currentLane + GetChangeInLaneInt(currentState);
     }
 
-    private Transform GetDesiredLaneAdjustedTarget()
+    private Vector3 GetDesiredLaneAdjustedTarget()
     {
         return GenerateLaneAdjustedTarget(trafficDirection, GetDesiredLane());
     }
 
-    private bool ReachedDestinationLane()
-    {
-        Vector3 positionRelativeToDestinationLaneAdjustedTarget = GetDesiredLaneAdjustedTarget().InverseTransformPoint(gameObject.transform.position);
+    private bool ReachedDestinationLane() {
+        Vector3 positionRelativeToDestinationLaneAdjustedTarget =
+            GetDesiredLaneAdjustedTarget() - gameObject.transform.position;
+//            .InverseTransformPoint(gameObject.transform.position);
         float xDistance = Mathf.Abs(positionRelativeToDestinationLaneAdjustedTarget.x);
         return xDistance <= laneMergingError * lanesWidth;
     }
@@ -236,11 +239,13 @@ public class DrivingAgent : MonoBehaviour {
         return gameObject.GetComponent<Collider>().bounds.size.z;
     }
 
-    private Vector3 ProjectPositionOnDesiredLane()
-    {
-        Vector3 positionRelativeToDestinationLaneAdjustedTarget = GetDesiredLaneAdjustedTarget().InverseTransformPoint(gameObject.transform.position);
+    private Vector3 ProjectPositionOnDesiredLane() {
+        Vector3 positionRelativeToDestinationLaneAdjustedTarget = 
+            GetDesiredLaneAdjustedTarget() - gameObject.transform.position;
+//            .InverseTransformPoint(gameObject.transform.position);
         float zDistance = Mathf.Abs(positionRelativeToDestinationLaneAdjustedTarget.z);
-        Vector3 position = GetDesiredLaneAdjustedTarget().TransformPoint(Vector3.back * zDistance);
+        Vector3 position = GetDesiredLaneAdjustedTarget() - (currentTargetDirection * zDistance);
+//            .TransformPoint(Vector3.back * zDistance);
         position.y = gameObject.transform.position.y;
         return position;
     }
@@ -249,7 +254,7 @@ public class DrivingAgent : MonoBehaviour {
     {
         float rayLength = GetVehicleLength() + GetMaximumFrontDistance();
         Vector3 rayOriginPosition = ProjectPositionOnDesiredLane();
-        Vector3 rayDirection = -GetDesiredLaneAdjustedTarget().transform.forward;
+        Vector3 rayDirection = -currentTargetDirection;
         RaycastHit hit;
         bool isPresent = Physics.Raycast(rayOriginPosition, rayDirection, out hit, rayLength);
         Debug.DrawRay(rayOriginPosition, rayDirection * rayLength, Color.blue, 0.05f, false);
@@ -309,7 +314,7 @@ public class DrivingAgent : MonoBehaviour {
 	}
 
 	private Vector3 NeededSteeringDirection() {
-		Vector3 relativePoint = gameObject.transform.InverseTransformPoint (GetLaneAdjustedTarget ().position);
+		Vector3 relativePoint = gameObject.transform.InverseTransformPoint(GetLaneAdjustedTarget());
 		if (relativePoint.x > 0) {
 			return Vector3.right;
 		} else if (relativePoint.x < 0) {
@@ -327,18 +332,17 @@ public class DrivingAgent : MonoBehaviour {
 		}
 	}
     
-    private Transform GenerateLaneAdjustedTarget(Vector3 direction, int lane) {
+    private Vector3 GenerateLaneAdjustedTarget(Vector3 direction, int lane) {
         Vector3 laneAdjustedTargetPosition;
+        var right = Vector3.Cross(currentTargetDirection, Vector3.up).normalized;
         if (direction == Vector3.left)
         {
-            laneAdjustedTargetPosition = currentTarget.position - currentTarget.right * GetLaneOffset(lane);
+            laneAdjustedTargetPosition = currentTarget - right * GetLaneOffset(lane);
         } else
         {
-            laneAdjustedTargetPosition = currentTarget.position + currentTarget.right * GetLaneOffset(lane);
+            laneAdjustedTargetPosition = currentTarget + right * GetLaneOffset(lane);
         }
-        Transform laneAdjustedTarget = Transform.Instantiate(currentTarget, laneAdjustedTargetPosition, currentTarget.rotation);
-        laneAdjustedTarget.position = laneAdjustedTargetPosition;
-        return laneAdjustedTarget;
+        return laneAdjustedTargetPosition;
     }
 
     float GetLaneOffset(int lane)
@@ -352,13 +356,13 @@ public class DrivingAgent : MonoBehaviour {
         return GetLaneOffset(currentLane);
     }
 
-    private Transform GetLaneAdjustedTarget()
+    private Vector3 GetLaneAdjustedTarget()
     {
         return GenerateLaneAdjustedTarget(trafficDirection, currentLane);
     }
 
     public bool ReachedCurrentTarget() {
-        var distance = Vector3.Distance(transform.position, GetLaneAdjustedTarget().position);
+        var distance = Vector3.Distance(transform.position, GetLaneAdjustedTarget());
         return distance <= DistanceThreshold;
     }
 

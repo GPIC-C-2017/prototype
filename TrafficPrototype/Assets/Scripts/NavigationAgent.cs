@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Linq;
 using UnityEngine;
 
 /**
@@ -17,7 +16,7 @@ public class NavigationAgent : MonoBehaviour {
     public TrafficControllerAgent TCA;
 
     private Waypoint[] path;
-    private int currentWaypoint = 0;
+    private int currentWaypoint;
     private DrivingAgent DA;
 
     /**
@@ -68,7 +67,20 @@ public class NavigationAgent : MonoBehaviour {
 
     // Sets the next target and updates the rest of the path accordingly
     void NextTarget() {
-        DA.SetNextTarget(path[currentWaypoint].transform);
+        Debug.Log("Next Target");
+        var from = currentWaypoint == 0 
+                ? gameObject.transform.position 
+                : path[currentWaypoint - 1].transform.position;
+        
+        var to = path[currentWaypoint].transform.position;
+        
+        Debug.Log(from);
+        Debug.Log(to);
+
+        var heading = from - to;
+        var direction = heading / heading.magnitude;
+        
+        DA.SetNextTarget(to, direction);
         currentWaypoint += 1;
     }
 
