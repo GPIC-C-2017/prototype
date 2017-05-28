@@ -67,7 +67,7 @@ public class NavigationAgent : MonoBehaviour {
 
     // Sets the next target and updates the rest of the path accordingly
     void NextTarget() {
-        DA.SetNextTarget(path[0].transform.position);
+        DA.SetNextTarget(path[0].transform);
         path = path.Skip(1).ToArray();
     }
 

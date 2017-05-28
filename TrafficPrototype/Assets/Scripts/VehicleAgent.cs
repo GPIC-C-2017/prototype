@@ -35,12 +35,12 @@ public class VehicleAgent : MonoBehaviour {
 	// Public Methods 
 
 	public void Accelerate() {
-		Vector3 forceVector = gameObject.transform.forward * GetVehicleAcceleration() * Time.deltaTime;
+		Vector3 forceVector = gameObject.transform.forward * GetVehicleAcceleration() * Time.fixedDeltaTime;
 		rb.AddForce (forceVector);
 	}
 
 	public void Brake() {
-		Vector3 forceVector = -gameObject.transform.forward * GetVehicleAcceleration() * Time.deltaTime;
+		Vector3 forceVector = -gameObject.transform.forward * GetVehicleAcceleration() * Time.fixedDeltaTime;
 		rb.AddForce (forceVector);
 
 	}	
@@ -75,8 +75,8 @@ public class VehicleAgent : MonoBehaviour {
 
 	private Rigidbody rb;
 
-	private void Steer(Vector3 direction) {
-		Vector3 torqueVector = direction * GetVehicleSteeringTorque () * Time.deltaTime;
+	public void Steer(Vector3 direction) {
+		Vector3 torqueVector = direction * GetVehicleSteeringTorque () * Time.fixedDeltaTime;
 		rb.AddRelativeTorque (torqueVector);
 	}
 
@@ -108,6 +108,7 @@ public class VehicleAgent : MonoBehaviour {
 	 * e^(-x), steer well at very low speeds, slowly at high speeds
 	 */
 	private float SteeringTorqueCurveFunction(float speedRatio) {
+        return 1f;
 		return Mathf.Exp (-speedRatio);
 	}
 
