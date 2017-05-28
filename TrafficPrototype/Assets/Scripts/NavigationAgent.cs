@@ -17,6 +17,7 @@ public class NavigationAgent : MonoBehaviour {
     public TrafficControllerAgent TCA;
 
     private Waypoint[] path;
+    private int currentWaypoint = 0;
     private DrivingAgent DA;
 
     /**
@@ -67,8 +68,8 @@ public class NavigationAgent : MonoBehaviour {
 
     // Sets the next target and updates the rest of the path accordingly
     void NextTarget() {
-        DA.SetNextTarget(path[0].transform);
-        path = path.Skip(1).ToArray();
+        DA.SetNextTarget(path[currentWaypoint].transform);
+        currentWaypoint += 1;
     }
 
     IEnumerator WaitAndGetPath() {
