@@ -11,13 +11,15 @@ using UnityEngine;
  */
 [RequireComponent(typeof(DrivingAgent))]
 public class NavigationAgent : MonoBehaviour {
-    
     public Waypoint Destination;
+
     public TrafficControllerAgent TCA;
+    private DrivingAgent DA;
 
     private Waypoint[] path;
     private int currentWaypoint;
-    private DrivingAgent DA;
+
+    private LaneConfiguration currentConf;
 
     /**
      * This method is called by the DrivingAgent when it spots a permanent obstruction
@@ -37,20 +39,7 @@ public class NavigationAgent : MonoBehaviour {
         // Request path from the current position, to the destination node.
         // Update inner state, and feed the DrivingAgent with the first junction
         //  of the path.
-        var nearbyWaypoints = FindObjectsOfType<Waypoint>();
-        
-        Waypoint closest = nearbyWaypoints[0];
-        var distance = Mathf.Infinity;
-        foreach (var waypoint in nearbyWaypoints) {
-            var diff = transform.position - waypoint.transform.position;
-            var curDistance = diff.sqrMagnitude;
-            if (curDistance < distance) {
-                closest = waypoint;
-                distance = curDistance;
-            }
-        }
-        
-        path = TCA.CalculatePath(closest, destinationNode.GetComponent<Waypoint>());
+        path = TCA.CalculatePath(ClosestWaypoint(), destinationNode.GetComponent<Waypoint>());
         NextTarget();
     }
 
@@ -67,25 +56,87 @@ public class NavigationAgent : MonoBehaviour {
 
     // Sets the next target and updates the rest of the path accordingly
     void NextTarget() {
-        Debug.Log("Next Target");
-        var from = currentWaypoint == 0 
-                ? gameObject.transform.position 
-                : path[currentWaypoint - 1].transform.position;
-        
-        var to = path[currentWaypoint].transform.position;
-        
-        Debug.Log(from);
-        Debug.Log(to);
+        Waypoint fromWp;
+        Vector3 fromLoc;
+        // if there is no previous waypoint
+        if (currentWaypoint == 0) {
+            fromWp = ClosestWaypoint();
+            fromLoc = gameObject.transform.position;
+        }
+        else {
+            fromWp = path[currentWaypoint - 1];
+            fromLoc = fromWp.transform.position;
+        }
 
-        var heading = from - to;
+        var toWp = path[currentWaypoint];
+        var toLoc = toWp.transform.position;
+
+        var heading = fromLoc - toLoc;
         var direction = heading / heading.magnitude;
-        
-        DA.SetNextTarget(to, direction);
-        currentWaypoint += 1;
+
+        DA.SetNextTarget(toLoc, direction);
+
+        var lc = TCA.GetLaneConfiguration(fromWp, toWp);
+        DA.SetLane(DetermineLane(lc, direction));
+
+        currentWaypoint++;
     }
 
+    // wait a small delay before getting the path to the target
+    // this ensures that the TCA has enough time to initiliase
     IEnumerator WaitAndGetPath() {
         yield return new WaitForSeconds(0.1f);
         if (Destination != null) RequestPathTo(Destination.gameObject);
     }
+
+    Waypoint ClosestWaypoint() {
+        var nearbyWaypoints = FindObjectsOfType<Waypoint>();
+
+        Waypoint closest = nearbyWaypoints[0];
+        var distance = Mathf.Infinity;
+        foreach (var waypoint in nearbyWaypoints) {
+            var diff = transform.position - waypoint.transform.position;
+            var curDistance = diff.sqrMagnitude;
+            if (curDistance < distance) {
+                closest = waypoint;
+                distance = curDistance;
+            }
+        }
+
+        return closest;
+    }
+
+    // we determine the lane by considering the angle between the previous target
+    // and the 2nd next waypoint:
+    // (2) ---- (3)
+    //  |
+    //  |
+    // (1)
+    // when travelling (1) -> (2), we'll need to keep to the right-most lane as we'll be turning right.
+    int DetermineLane(LaneConfiguration lc, Vector3 direction) {
+        // there is no previous waypoint
+        if (currentWaypoint == 0)
+            return 1;
+
+        // if there is no next
+        if (currentWaypoint + 1 == path.Length)
+            return 1;
+
+        if (lc.NumberOfLeftLanes() < 2)
+            return 1;
+
+        var previous = path[currentWaypoint - 1].transform.position;
+        var current = path[currentWaypoint].transform.position;
+        var next = path[currentWaypoint + 1].transform.position;
+        
+        var heading = next - previous;
+        var distance = heading.magnitude;
+        var targetDir = heading / distance; // This is now the normalized direction.
+
+        var relativeDir = XVector3.AngleDir(direction, targetDir, Vector3.up);
+
+        return relativeDir == Vector3.left ? lc.LeftMost() : lc.RightMost();
+    }
+
+
 }

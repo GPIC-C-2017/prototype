@@ -70,6 +70,13 @@ public class DrivingAgent : MonoBehaviour {
 		
 	}
 
+    void OnDrawGizmos() {
+        Gizmos.color = Color.black;
+        if (currentTarget != default(Vector3)) {
+            Gizmos.DrawCube(GetLaneAdjustedTarget(), new Vector3(0.5f, 0.5f, 0.5f));
+        }
+    }
+
     // Update is called once per frame
     void FixedUpdate() {
 
