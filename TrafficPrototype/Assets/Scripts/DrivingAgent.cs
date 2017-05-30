@@ -26,6 +26,8 @@ public class DrivingAgent : MonoBehaviour {
 	public float minimumFrontDistance = 1f;
 	public float frontDistancePerSpeed = .5f;
 	public bool enableCollaborationFeatures = true;
+	public float targetApproachDistance = 3.0f;
+	public float targetApproachMinRelativeSpeed = 0.15f;
 
     [Range(1, 3)]
     public int currentLane = 1;
@@ -117,7 +119,7 @@ public class DrivingAgent : MonoBehaviour {
 
             // Acceleration
 
-            if (ObstaclePresentInFront())
+			if (ObstaclePresentInFront() || NeedsBraking())
             {
                 //Debug.Log ("Obstacle detected! Braking.");
                 vehicle.Brake();
@@ -141,11 +143,14 @@ public class DrivingAgent : MonoBehaviour {
         else
         {
 
-            if (NeedsAcceleration())
-            {
-                vehicle.Accelerate();
+			if (NeedsAcceleration ()) {
+				vehicle.Accelerate ();
 
-            }
+			} else if (NeedsBraking ()) {
+				vehicle.Brake ();
+
+			}
+				
 
         }
     }
@@ -222,6 +227,20 @@ public class DrivingAgent : MonoBehaviour {
         }
         return (Mathf.Sin(2f * Mathf.PI * (distance - 1f / 4f)) + 1f) / 2f;
     }
+
+	private float DesiredSpeedCurve(float distance) {
+		float targetApproachAbsoluteDistance = targetApproachDistance * GetOptimalFrontDistance ();
+		if (distance >= targetApproachDistance) {
+			return 1;
+		}
+		float remainingDistance = targetApproachDistance - distance;
+		remainingDistance /= targetApproachDistance; // 0...1
+		float result = Mathf.Exp (-distance);
+		if (result < targetApproachMinRelativeSpeed)
+			return targetApproachMinRelativeSpeed;
+		return result;
+	}
+
 
     private int GetDesiredLane()
     {
@@ -313,7 +332,19 @@ public class DrivingAgent : MonoBehaviour {
 
 
     private bool NeedsAcceleration() {
-		return true;
+		return vehicle.GetCurrentSpeed () < GetDesiredSpeed ();
+	}
+
+	private bool NeedsBraking() {
+		return vehicle.GetCurrentSpeed () > GetDesiredSpeed ();
+	}
+
+	private float GetDesiredSpeed() {
+		if (currentTarget != null) {
+			float distanceToTarget = Vector3.Distance (gameObject.transform.position, GetLaneAdjustedTarget ());
+			return DesiredSpeedCurve (distanceToTarget) * vehicle.maximumVehicleSpeed;
+		}
+		return vehicle.maximumVehicleSpeed;
 	}
 		
 	private bool IsMoving() {
