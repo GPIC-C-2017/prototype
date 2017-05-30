@@ -74,10 +74,18 @@ public class NavigationAgent : MonoBehaviour {
         var heading = fromLoc - toLoc;
         var direction = heading / heading.magnitude;
 
-        DA.SetNextTarget(toLoc, direction);
-
         var lc = TCA.GetLaneConfiguration(fromWp, toWp);
-        DA.SetLane(DetermineLane(lc, direction));
+        
+        Vector3 turnDirection;
+        DA.SetLane(DetermineLane(lc, direction, out turnDirection));
+
+        var nextLane = 0;
+        if (turnDirection == Vector3.left) {
+            nextLane = -1;
+        } else if (turnDirection == Vector3.right) {
+            nextLane = 1;
+        }
+        DA.SetNextTarget(toLoc, direction, nextLane);
 
         currentWaypoint++;
     }
@@ -113,8 +121,9 @@ public class NavigationAgent : MonoBehaviour {
     //  |
     // (1)
     // when travelling (1) -> (2), we'll need to keep to the right-most lane as we'll be turning right.
-    int DetermineLane(LaneConfiguration lc, Vector3 direction) {
+    int DetermineLane(LaneConfiguration lc, Vector3 direction, out Vector3 willTurn) {
         // there is no previous waypoint
+        willTurn = Vector3.zero;
         if (currentWaypoint == 0)
             return 1;
 
@@ -135,6 +144,7 @@ public class NavigationAgent : MonoBehaviour {
 
         var relativeDir = XVector3.AngleDir(direction, targetDir, Vector3.up);
 
+        willTurn = relativeDir;
         return relativeDir == Vector3.left ? lc.LeftMost() : lc.RightMost();
     }
 
