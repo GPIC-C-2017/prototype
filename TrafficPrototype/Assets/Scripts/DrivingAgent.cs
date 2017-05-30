@@ -345,7 +345,7 @@ public class DrivingAgent : MonoBehaviour {
         else {
             laneAdjustedTargetPosition = currentTarget + right * GetLaneOffset(lane);
         }
-		laneAdjustedTargetPosition += nextLane * currentTargetDirection * GetLaneOffset (nextLane);
+		laneAdjustedTargetPosition += nextLane * currentTargetDirection * GetLaneOffset (Mathf.Abs(nextLane));
         return laneAdjustedTargetPosition;
     }
 
