@@ -31,6 +31,8 @@ public class VehicleAgent : MonoBehaviour {
 	[Range (500.0f, 5000.0f)]
 	public float maximumVehicleTorque = 1100.0f;
 
+	public float lateralForceToTorqueRatio = 0.25f;
+
 
 	// Public Methods 
 
@@ -46,11 +48,11 @@ public class VehicleAgent : MonoBehaviour {
 	}	
 
 	public void SteerRight() {
-		Steer (Vector3.up);
+		Steer (Vector3.right);
 	}
 
 	public void SteerLeft() {
-		Steer (Vector3.down);
+		Steer (Vector3.left);
 	}
 
 	public float GetCurrentSpeed() {
@@ -76,8 +78,14 @@ public class VehicleAgent : MonoBehaviour {
 	private Rigidbody rb;
 
 	public void Steer(Vector3 direction) {
-		Vector3 torqueVector = direction * GetVehicleSteeringTorque () * Time.fixedDeltaTime;
+		
+		// TORQUE is a rotation force across the Y axis. Clockwise is positive (up), anticlockwise is negative (-up).
+		Vector3 torqueDirection = direction == Vector3.right ? Vector3.up : Vector3.down; 
+		Vector3 torqueVector = torqueDirection * GetVehicleSteeringTorque () * Time.fixedDeltaTime;
 		rb.AddRelativeTorque (torqueVector);
+
+		Vector3 lateralForceVector = direction * GetVehicleSteeringTorque () * Time.fixedDeltaTime * lateralForceToTorqueRatio;
+		rb.AddRelativeForce (lateralForceVector);
 	}
 
 	/**
