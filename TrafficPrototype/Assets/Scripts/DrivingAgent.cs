@@ -29,6 +29,7 @@ public class DrivingAgent : MonoBehaviour {
     public float TargetApproachMinRelativeSpeed = 0.15f;
 
     [Range(1, 3)] public int CurrentLane = 1;
+	private int nextLane = 0;
 
     public const float LanesWidth = 2.5f; // Width of single lanes
     [Range(0.15f, 0.9f)] public const float LaneMergingError = 0.005f; // Tolerated error when merging lane
@@ -51,10 +52,15 @@ public class DrivingAgent : MonoBehaviour {
     private VehicleAgent vehicle;
     private Vector3 currentTargetDirection;
     
-    public void SetNextTarget(Vector3 target, Vector3 targetDirection) {
+	public void SetNextTarget(Vector3 target, Vector3 targetDirection, int nextLaneNumber) {
         currentTarget = target;
         currentTargetDirection = targetDirection;
+		nextLane = nextLaneNumber; 
     }
+
+	public void SetNextTarget(Vector3 target, Vector3 targetDirection) {
+		SetNextTarget(target, targetDirection, 0);
+	}
 
     public void SetLane(int lane) {
         CurrentLane = lane;
@@ -209,7 +215,7 @@ public class DrivingAgent : MonoBehaviour {
     }
 
     private Vector3 GetDesiredLaneAdjustedTarget() {
-        return GenerateLaneAdjustedTarget(TrafficDirection, GetDesiredLane());
+		return GenerateLaneAdjustedTarget(TrafficDirection, GetDesiredLane(), nextLane);
     }
 
     private bool ReachedDestinationLane() {
@@ -328,17 +334,21 @@ public class DrivingAgent : MonoBehaviour {
         }
     }
 
-    private Vector3 GenerateLaneAdjustedTarget(Vector3 direction, int lane) {
+	private Vector3 GenerateLaneAdjustedTarget(Vector3 direction, int lane, int nextLane) {
         Vector3 laneAdjustedTargetPosition;
-        var right = Vector3.Cross(currentTargetDirection, Vector3.up).normalized;
+		var right = Vector3.Cross(currentTargetDirection, Vector3.up).normalized;
+		nextLane = TrafficDirection == Vector3.left ? -nextLane : nextLane;
+
         if (direction == Vector3.left) {
             laneAdjustedTargetPosition = currentTarget - right * GetLaneOffset(lane);
         }
         else {
             laneAdjustedTargetPosition = currentTarget + right * GetLaneOffset(lane);
         }
+		laneAdjustedTargetPosition += nextLane * currentTargetDirection * GetLaneOffset (nextLane);
         return laneAdjustedTargetPosition;
     }
+
 
     float GetLaneOffset(int lane) {
         float offset = ((lane - 1) * LanesWidth) + 0.5f * LanesWidth;
@@ -350,7 +360,7 @@ public class DrivingAgent : MonoBehaviour {
     }
 
     private Vector3 GetLaneAdjustedTarget() {
-        return GenerateLaneAdjustedTarget(TrafficDirection, CurrentLane);
+        return GenerateLaneAdjustedTarget(TrafficDirection, CurrentLane, nextLane);
     }
 
     public bool ReachedCurrentTarget() {
