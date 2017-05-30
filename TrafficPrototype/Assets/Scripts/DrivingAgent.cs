@@ -1,10 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public enum DrivingAgentState {
-    Driving, JoiningInternalLane, JoiningExternalLane
-};
+    Driving,
+    JoiningInternalLane,
+    JoiningExternalLane
+}
 
 
 /**
@@ -22,55 +22,48 @@ public enum DrivingAgentState {
 [RequireComponent(typeof(VehicleAgent))]
 [RequireComponent(typeof(NavigationAgent))]
 public class DrivingAgent : MonoBehaviour {
+    public float MinimumFrontDistance = 1f;
+    public float FrontDistancePerSpeed = .5f;
+    public bool EnableCollaborationFeatures = true;
+    public float TargetApproachDistance = 3.0f;
+    public float TargetApproachMinRelativeSpeed = 0.15f;
 
-	public float minimumFrontDistance = 1f;
-	public float frontDistancePerSpeed = .5f;
-	public bool enableCollaborationFeatures = true;
-	public float targetApproachDistance = 3.0f;
-	public float targetApproachMinRelativeSpeed = 0.15f;
+    [Range(1, 3)] public int CurrentLane = 1;
 
-    [Range(1, 3)]
-    public int currentLane = 1;
+    public const float LanesWidth = 2.5f; // Width of single lanes
+    [Range(0.15f, 0.9f)] public const float LaneMergingError = 0.005f; // Tolerated error when merging lane
+    [Range(0.1f, 0.8f)] public const float LaneMergingMaxSteeringAngle = 0.30f;
+    public Vector3 TrafficDirection = Vector3.left; // Left for UK/Japan traffic, Right for intl.
 
-    public const float lanesWidth = 2.5f;              // Width of single lanes
-    [Range(0.15f, 0.9f)]
-    public const float laneMergingError = 0.005f;        // Tolerated error when merging lane
-    [Range(0.1f, 0.8f)]
-    public const float laneMergingMaxSteeringAngle = 0.30f;
-    public Vector3 trafficDirection = Vector3.left;    // Left for UK/Japan traffic, Right for intl.
-
-	private Vector3 currentTarget;
+    private Vector3 currentTarget;
 
     private const float DistanceThreshold = .5f;
 
-    [Range(0.01f, 0.9f)]
-    public float laneMergingMinRelativeSpeed = 0.1f;
+    [Range(0.01f, 0.9f)] public float LaneMergingMinRelativeSpeed = 0.1f;
 
-    [Range(0.02f, 1.0f)]
-    public float laneMergingMaxRelativeSpeed = 0.8f;
+    [Range(0.02f, 1.0f)] public float LaneMergingMaxRelativeSpeed = 0.8f;
 
-    public float laneMergingSpeedOffset = 0.20f;
+    public float LaneMergingSpeedOffset = 0.20f;
 
     // TODO: temporary public for debugging purposes
-    public DrivingAgentState currentState = DrivingAgentState.Driving;
+    public DrivingAgentState CurrentState = DrivingAgentState.Driving;
 
+    private VehicleAgent vehicle;
+    private Vector3 currentTargetDirection;
+    
     public void SetNextTarget(Vector3 target, Vector3 targetDirection) {
-		currentTarget = target;
+        currentTarget = target;
         currentTargetDirection = targetDirection;
     }
 
     public void SetLane(int lane) {
-        currentLane = lane;
+        CurrentLane = lane;
     }
 
-	private VehicleAgent vehicle;
-    private Vector3 currentTargetDirection;
-
     // Use this for initialization
-	void Start () {
-		vehicle = gameObject.GetComponent<VehicleAgent> ();
-		
-	}
+    void Start() {
+        vehicle = gameObject.GetComponent<VehicleAgent>();
+    }
 
     void OnDrawGizmos() {
         Gizmos.color = Color.black;
@@ -81,175 +74,142 @@ public class DrivingAgent : MonoBehaviour {
 
     // Update is called once per frame
     void FixedUpdate() {
-
-        switch (currentState)
-        {
+        switch (CurrentState) {
             case DrivingAgentState.Driving:
                 Drive();
                 break;
 
             case DrivingAgentState.JoiningInternalLane:
             case DrivingAgentState.JoiningExternalLane:
-                JoinLane(trafficDirection * GetChangeInLaneInt(currentState));
+                JoinLane(TrafficDirection * GetChangeInLaneInt(CurrentState));
                 break;
 
             default:
                 break;
         }
-
     }
 
-    private int GetChangeInLaneInt(DrivingAgentState state)
-    {
-        if (state == DrivingAgentState.JoiningInternalLane)
-        {
+    private int GetChangeInLaneInt(DrivingAgentState state) {
+        if (state == DrivingAgentState.JoiningInternalLane) {
             return -1;
-        } else if (state == DrivingAgentState.JoiningExternalLane)
-        {
+        }
+        else if (state == DrivingAgentState.JoiningExternalLane) {
             return 1;
-        } else
-        {
+        }
+        else {
             return 0;
         }
     }
 
     private void Drive() {
-        if (vehicle.IsMoving())
-        {
-
+        if (vehicle.IsMoving()) {
             // Acceleration
 
-			if (ObstaclePresentInFront() || NeedsBraking())
-            {
+            if (ObstaclePresentInFront() || NeedsBraking()) {
                 //Debug.Log ("Obstacle detected! Braking.");
                 vehicle.Brake();
-
             }
-            else if (NeedsAcceleration())
-            {
+            else if (NeedsAcceleration()) {
                 //Debug.Log("Way is clear. Accelerating...");
                 vehicle.Accelerate();
-
             }
-            else
-            {
+            else {
                 // Coast...
-
             }
 
             SteerTowardsTarget();
-
         }
-        else
-        {
-
-			if (NeedsAcceleration ()) {
-				vehicle.Accelerate ();
-
-			} else if (NeedsBraking ()) {
-				vehicle.Brake ();
-
-			}
-				
-
+        else {
+            if (NeedsAcceleration()) {
+                vehicle.Accelerate();
+            }
+            else if (NeedsBraking()) {
+                vehicle.Brake();
+            }
         }
     }
 
     private void JoinLane(Vector3 direction) {
-        
         float idealLaneMergingSpeed = GetCurrentIdealLaneMergingSpeed();
 
         // Debug.Log("Current speed is " + vehicle.GetCurrentSpeed() + ", ideal speed " + idealLaneMergingSpeed.ToString());
 
-        if (vehicle.GetCurrentSpeed() < idealLaneMergingSpeed)
-        {
+        if (vehicle.GetCurrentSpeed() < idealLaneMergingSpeed) {
             // Need to get to lane merging minimum speed
             // Debug.Log("Merging - Accelerating (Need to get to lane merging minimum speed...");
             vehicle.Accelerate();
-
         }
-        else if (vehicle.GetCurrentSpeed() > idealLaneMergingSpeed + laneMergingSpeedOffset * idealLaneMergingSpeed)
-        {
+        else if (vehicle.GetCurrentSpeed() > idealLaneMergingSpeed + LaneMergingSpeedOffset * idealLaneMergingSpeed) {
             // Need to slow down to lane merging minimum speed
             // Debug.Log("Merging - Braking (Need to get to lane merging minimum speed...");
             vehicle.Brake();
         }
 
-        
-        if (ReachedDestinationLane())
-        {
+
+        if (ReachedDestinationLane()) {
             // Debug.Log("Reached destination lane");
-            currentLane = GetDesiredLane();
-            currentState = DrivingAgentState.Driving;
+            CurrentLane = GetDesiredLane();
+            CurrentState = DrivingAgentState.Driving;
         }
-        else
-        {
-            if (IsDesiredLaneFreeOfObstacles())
-            {
+        else {
+            if (IsDesiredLaneFreeOfObstacles()) {
                 // Debug.Log("Lane is free. Steering towards it...");
 
                 Vector3 dir = (GetLaneAdjustedTarget() - gameObject.transform.position).normalized;
                 float currentSteeringAngle = Vector3.Dot(dir, transform.forward);
 
                 // Steer towards lane.
-                if (direction == Vector3.left && currentSteeringAngle > 1 - laneMergingMaxSteeringAngle)
+                if (direction == Vector3.left && currentSteeringAngle > 1 - LaneMergingMaxSteeringAngle)
                     vehicle.SteerLeft();
 
-                else if (direction == Vector3.right && currentSteeringAngle > 1 - laneMergingMaxSteeringAngle)
+                else if (direction == Vector3.right && currentSteeringAngle > 1 - LaneMergingMaxSteeringAngle)
                     vehicle.SteerRight();
-
-            } else
-            {
+            }
+            else {
                 // Debug.Log("Waiting for lane to free...");
                 // Coast and wait for lane to free.
                 // Maybe implement a timer for giving up all hope?
             }
         }
-
     }
 
     private float GetCurrentIdealLaneMergingSpeed() {
         float distance = Vector3.Distance(ProjectPositionOnDesiredLane(), gameObject.transform.position);
-        distance = Mathf.Abs(distance / lanesWidth);
-        float curveResult = LaneMergingSpeedCurve(distance) * laneMergingMaxRelativeSpeed * vehicle.maximumVehicleSpeed;
-        return Mathf.Max(laneMergingMinRelativeSpeed * vehicle.maximumVehicleSpeed, curveResult);
+        distance = Mathf.Abs(distance / LanesWidth);
+        float curveResult = LaneMergingSpeedCurve(distance) * LaneMergingMaxRelativeSpeed * vehicle.maximumVehicleSpeed;
+        return Mathf.Max(LaneMergingMinRelativeSpeed * vehicle.maximumVehicleSpeed, curveResult);
     }
 
-    private float LaneMergingSpeedCurve(float distance)
-    {
-        if (distance < 0)
-        {
+    private float LaneMergingSpeedCurve(float distance) {
+        if (distance < 0) {
             distance = 0f;
         }
-        else if (distance > 1)
-        {
+        else if (distance > 1) {
             distance = 1f;
         }
         return (Mathf.Sin(2f * Mathf.PI * (distance - 1f / 4f)) + 1f) / 2f;
     }
 
-	private float DesiredSpeedCurve(float distance) {
-		float targetApproachAbsoluteDistance = targetApproachDistance * GetOptimalFrontDistance ();
-		if (distance >= targetApproachDistance) {
-			return 1;
-		}
-		float remainingDistance = targetApproachDistance - distance;
-		remainingDistance /= targetApproachDistance; // 0...1
-		float result = Mathf.Exp (-distance);
-		if (result < targetApproachMinRelativeSpeed)
-			return targetApproachMinRelativeSpeed;
-		return result;
-	}
-
-
-    private int GetDesiredLane()
-    {
-        return currentLane + GetChangeInLaneInt(currentState);
+    private float DesiredSpeedCurve(float distance) {
+        float targetApproachAbsoluteDistance = TargetApproachDistance * GetOptimalFrontDistance();
+        if (distance >= TargetApproachDistance) {
+            return 1;
+        }
+        float remainingDistance = TargetApproachDistance - distance;
+        remainingDistance /= TargetApproachDistance; // 0...1
+        float result = Mathf.Exp(-distance);
+        if (result < TargetApproachMinRelativeSpeed)
+            return TargetApproachMinRelativeSpeed;
+        return result;
     }
 
-    private Vector3 GetDesiredLaneAdjustedTarget()
-    {
-        return GenerateLaneAdjustedTarget(trafficDirection, GetDesiredLane());
+
+    private int GetDesiredLane() {
+        return CurrentLane + GetChangeInLaneInt(CurrentState);
+    }
+
+    private Vector3 GetDesiredLaneAdjustedTarget() {
+        return GenerateLaneAdjustedTarget(TrafficDirection, GetDesiredLane());
     }
 
     private bool ReachedDestinationLane() {
@@ -257,16 +217,15 @@ public class DrivingAgent : MonoBehaviour {
             GetDesiredLaneAdjustedTarget() - gameObject.transform.position;
 //            .InverseTransformPoint(gameObject.transform.position);
         float xDistance = Mathf.Abs(positionRelativeToDestinationLaneAdjustedTarget.x);
-        return xDistance <= laneMergingError * lanesWidth;
+        return xDistance <= LaneMergingError * LanesWidth;
     }
 
-    private float GetVehicleLength()
-    {
+    private float GetVehicleLength() {
         return gameObject.GetComponent<Collider>().bounds.size.z;
     }
 
     private Vector3 ProjectPositionOnDesiredLane() {
-        Vector3 positionRelativeToDestinationLaneAdjustedTarget = 
+        Vector3 positionRelativeToDestinationLaneAdjustedTarget =
             GetDesiredLaneAdjustedTarget() - gameObject.transform.position;
 //            .InverseTransformPoint(gameObject.transform.position);
         float zDistance = Mathf.Abs(positionRelativeToDestinationLaneAdjustedTarget.z);
@@ -276,8 +235,7 @@ public class DrivingAgent : MonoBehaviour {
         return position;
     }
 
-    private bool IsDesiredLaneFreeOfObstacles()
-    {
+    private bool IsDesiredLaneFreeOfObstacles() {
         float rayLength = GetVehicleLength() + GetMaximumFrontDistance();
         Vector3 rayOriginPosition = ProjectPositionOnDesiredLane();
         Vector3 rayDirection = -currentTargetDirection;
@@ -287,116 +245,112 @@ public class DrivingAgent : MonoBehaviour {
         return !isPresent;
     }
 
-	// Checks whether there is an obstacle in front of the vehicle or not at a specific distance
-	private bool ObstaclePresentAtDistance(float distance) {
-		
-		Vector3 forward = gameObject.transform.TransformVector(Vector3.forward);
-		Debug.DrawRay (gameObject.transform.position, forward * distance, Color.red, 0.05f, false);
-		RaycastHit hit;
+    // Checks whether there is an obstacle in front of the vehicle or not at a specific distance
+    private bool ObstaclePresentAtDistance(float distance) {
+        Vector3 forward = gameObject.transform.TransformVector(Vector3.forward);
+        Debug.DrawRay(gameObject.transform.position, forward * distance, Color.red, 0.05f, false);
+        RaycastHit hit;
 
         // 
-		bool isPresent = Physics.Raycast (gameObject.transform.position, forward, out hit, distance);
-		if (!enableCollaborationFeatures || !isPresent) {
-			return isPresent;
-		}
+        bool isPresent = Physics.Raycast(gameObject.transform.position, forward, out hit, distance);
+        if (!EnableCollaborationFeatures || !isPresent) {
+            return isPresent;
+        }
 
-		float obstacleDistance = hit.distance;
-		GameObject obstacle = hit.collider.gameObject;
+        float obstacleDistance = hit.distance;
+        GameObject obstacle = hit.collider.gameObject;
 
-		bool isVehicle = obstacle.GetComponent<DrivingAgent>() != null && obstacle.GetComponent<DrivingAgent>().currentState == DrivingAgentState.Driving;
+        bool isVehicle = obstacle.GetComponent<DrivingAgent>() != null &&
+                         obstacle.GetComponent<DrivingAgent>().CurrentState == DrivingAgentState.Driving;
         if (!isVehicle) {
             return isPresent;
         }
 
         float otherDistance = obstacle.GetComponent<DrivingAgent>().GetOptimalFrontDistance();
-        float distanceToFrontVehicle = (distance - otherDistance) + minimumFrontDistance;
+        float distanceToFrontVehicle = (distance - otherDistance) + MinimumFrontDistance;
         return hit.distance < distanceToFrontVehicle;
-
     }
 
-	// Checks whether there is an obstacle in front of the vehicle at an optimal distance (based on current speed)
-	private bool ObstaclePresentInFront() {
+    // Checks whether there is an obstacle in front of the vehicle at an optimal distance (based on current speed)
+    private bool ObstaclePresentInFront() {
         float distance = GetOptimalFrontDistance();
-		return ObstaclePresentAtDistance (distance);
-	}
-
-    public float GetOptimalFrontDistance()
-    {
-        return minimumFrontDistance + (frontDistancePerSpeed * vehicle.GetCurrentSpeed());
+        return ObstaclePresentAtDistance(distance);
     }
 
-    public float GetMaximumFrontDistance()
-    {
-        return minimumFrontDistance + (frontDistancePerSpeed * vehicle.maximumVehicleSpeed);
+    public float GetOptimalFrontDistance() {
+        return MinimumFrontDistance + (FrontDistancePerSpeed * vehicle.GetCurrentSpeed());
+    }
+
+    public float GetMaximumFrontDistance() {
+        return MinimumFrontDistance + (FrontDistancePerSpeed * vehicle.maximumVehicleSpeed);
     }
 
 
     private bool NeedsAcceleration() {
-		return vehicle.GetCurrentSpeed () < GetDesiredSpeed ();
-	}
+        return vehicle.GetCurrentSpeed() < GetDesiredSpeed();
+    }
 
-	private bool NeedsBraking() {
-		return vehicle.GetCurrentSpeed () > GetDesiredSpeed ();
-	}
+    private bool NeedsBraking() {
+        return vehicle.GetCurrentSpeed() > GetDesiredSpeed();
+    }
 
-	private float GetDesiredSpeed() {
-		if (currentTarget != null) {
-			float distanceToTarget = Vector3.Distance (gameObject.transform.position, GetLaneAdjustedTarget ());
-			return DesiredSpeedCurve (distanceToTarget) * vehicle.maximumVehicleSpeed;
-		}
-		return vehicle.maximumVehicleSpeed;
-	}
-		
-	private bool IsMoving() {
-		return (Mathf.Abs (vehicle.GetCurrentSpeed ()) > 0);
-	}
+    private float GetDesiredSpeed() {
+        if (currentTarget != default(Vector3)) {
+            float distanceToTarget = Vector3.Distance(gameObject.transform.position, GetLaneAdjustedTarget());
+            return DesiredSpeedCurve(distanceToTarget) * vehicle.maximumVehicleSpeed;
+        }
+        return vehicle.maximumVehicleSpeed;
+    }
 
-	private Vector3 NeededSteeringDirection() {
-		Vector3 relativePoint = gameObject.transform.InverseTransformPoint(GetLaneAdjustedTarget());
-		if (relativePoint.x > 0) {
-			return Vector3.right;
-		} else if (relativePoint.x < 0) {
-			return Vector3.left;
-		} else {
-			return Vector3.zero;
-		}		
-	}
+    private bool IsMoving() {
+        return (Mathf.Abs(vehicle.GetCurrentSpeed()) > 0);
+    }
 
-	private void SteerTowardsTarget() {
-		if (NeededSteeringDirection () == Vector3.left) {
-			vehicle.SteerLeft ();
-		} else if (NeededSteeringDirection () == Vector3.right) {
-			vehicle.SteerRight ();
-		}
-	}
-    
+    private Vector3 NeededSteeringDirection() {
+        Vector3 relativePoint = gameObject.transform.InverseTransformPoint(GetLaneAdjustedTarget());
+        if (relativePoint.x > 0) {
+            return Vector3.right;
+        }
+        else if (relativePoint.x < 0) {
+            return Vector3.left;
+        }
+        else {
+            return Vector3.zero;
+        }
+    }
+
+    private void SteerTowardsTarget() {
+        if (NeededSteeringDirection() == Vector3.left) {
+            vehicle.SteerLeft();
+        }
+        else if (NeededSteeringDirection() == Vector3.right) {
+            vehicle.SteerRight();
+        }
+    }
+
     private Vector3 GenerateLaneAdjustedTarget(Vector3 direction, int lane) {
         Vector3 laneAdjustedTargetPosition;
         var right = Vector3.Cross(currentTargetDirection, Vector3.up).normalized;
-        if (direction == Vector3.left)
-        {
+        if (direction == Vector3.left) {
             laneAdjustedTargetPosition = currentTarget - right * GetLaneOffset(lane);
-        } else
-        {
+        }
+        else {
             laneAdjustedTargetPosition = currentTarget + right * GetLaneOffset(lane);
         }
         return laneAdjustedTargetPosition;
     }
 
-    float GetLaneOffset(int lane)
-    {
-        float offset = ((lane - 1) * lanesWidth) + 0.5f * lanesWidth;
+    float GetLaneOffset(int lane) {
+        float offset = ((lane - 1) * LanesWidth) + 0.5f * LanesWidth;
         return offset;
     }
 
-    float GetCurrentLaneOffset()
-    {
-        return GetLaneOffset(currentLane);
+    float GetCurrentLaneOffset() {
+        return GetLaneOffset(CurrentLane);
     }
 
-    private Vector3 GetLaneAdjustedTarget()
-    {
-        return GenerateLaneAdjustedTarget(trafficDirection, currentLane);
+    private Vector3 GetLaneAdjustedTarget() {
+        return GenerateLaneAdjustedTarget(TrafficDirection, CurrentLane);
     }
 
     public bool ReachedCurrentTarget() {
@@ -404,14 +358,11 @@ public class DrivingAgent : MonoBehaviour {
         return distance <= DistanceThreshold;
     }
 
-    public float GetLaneMergingMinSpeed()
-    {
-        return laneMergingMinRelativeSpeed * vehicle.maximumVehicleSpeed;
+    public float GetLaneMergingMinSpeed() {
+        return LaneMergingMinRelativeSpeed * vehicle.maximumVehicleSpeed;
     }
 
-    public float GetLaneMergingMaxSpeed()
-    {
-        return laneMergingMaxRelativeSpeed * vehicle.maximumVehicleSpeed;
+    public float GetLaneMergingMaxSpeed() {
+        return LaneMergingMaxRelativeSpeed * vehicle.maximumVehicleSpeed;
     }
-
 }
