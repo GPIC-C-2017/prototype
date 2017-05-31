@@ -17,7 +17,7 @@ public static class XVector3 {
     }
 
     public static Vector3 Direction(Vector3 from, Vector3 to) {
-        var heading = from - to;
+        var heading = to - from;
         var distance = heading.magnitude;
         return heading / distance;
     }

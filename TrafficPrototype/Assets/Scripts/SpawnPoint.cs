@@ -56,7 +56,8 @@ public class SpawnPoint : MonoBehaviour {
     }
 
     private void SpawnVehicle() {
-        var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity);
+        var traffic = GameObject.FindGameObjectWithTag("TrafficContainer");
+        var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity, traffic.transform);
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
         navigationAgent.TCA = TCA;
         navigationAgent.Destination = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];

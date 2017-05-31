@@ -6,8 +6,8 @@ public class LaneConfiguration : MonoBehaviour {
 	public Waypoint From;
 	public Waypoint To;
 
-	public string LeftLanes;
-	public string RightLanes;
+	public string LeftLanes = "1";
+	public string RightLanes = "1";
 
 	private BitVector32 leftConf;
 	private BitVector32 rightConf;

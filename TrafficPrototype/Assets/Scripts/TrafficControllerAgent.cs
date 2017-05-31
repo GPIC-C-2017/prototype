@@ -5,8 +5,9 @@ using UnityEngine;
 
 public class TrafficControllerAgent : MonoBehaviour {
     public GameObject WaypointContainer;
+    public GameObject LaneConfigurationPrefab;
 
-    private LaneConfiguration[] laneConfigurations;
+    private List<LaneConfiguration> laneConfigurations;
     private Waypoint[] endWaypoints;
 
     void Awake() {
@@ -23,7 +24,7 @@ public class TrafficControllerAgent : MonoBehaviour {
                 wps.Add(wp);
             }
         }
-        laneConfigurations = lanes.ToArray();
+        laneConfigurations = lanes;
         endWaypoints = wps.ToArray();
     }
 
@@ -66,8 +67,15 @@ public class TrafficControllerAgent : MonoBehaviour {
         if (lc.From == from && lc.To == to) {
             return lc;
         }
-
-        var nlc = WaypointContainer.AddComponent<LaneConfiguration>();
+        
+        var midPoint = (to.transform.position - from.transform.position) * 0.5f;
+        midPoint += from.transform.position;
+        
+        var nlcGameObject = Instantiate(LaneConfigurationPrefab, midPoint, Quaternion.identity, WaypointContainer.transform);
+        var nlc = nlcGameObject.GetComponent<LaneConfiguration>();
+        
+        laneConfigurations.Add(nlc);
+        
         nlc.From = to;
         nlc.To = from;
         nlc.LeftLanes = lc.RightLanes;

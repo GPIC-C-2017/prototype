@@ -54,6 +54,7 @@ public class NavigationAgent : MonoBehaviour {
         if (DA.ReachedCurrentTarget()) {
             if (currentWaypoint == path.Length) {
                 Destroy(gameObject);
+                return;
             }
             NextTarget();
         }
