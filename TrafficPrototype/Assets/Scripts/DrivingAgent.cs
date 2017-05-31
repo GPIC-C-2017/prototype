@@ -22,8 +22,10 @@ public enum DrivingAgentState {
 [RequireComponent(typeof(VehicleAgent))]
 [RequireComponent(typeof(NavigationAgent))]
 public class DrivingAgent : MonoBehaviour {
+	
     public float MinimumFrontDistance = 1f;
-    public float FrontDistancePerSpeed = .5f;
+    public float FrontDistancePerSpeed = .10f;
+
     public bool EnableCollaborationFeatures = true;
     public float TargetApproachDistance = 3.0f;
     public float TargetApproachMinRelativeSpeed = 0.15f;
@@ -108,31 +110,21 @@ public class DrivingAgent : MonoBehaviour {
     }
 
     private void Drive() {
-        if (vehicle.IsMoving()) {
-            // Acceleration
+        // Acceleration
 
-            if (ObstaclePresentInFront() || NeedsBraking()) {
-                //Debug.Log ("Obstacle detected! Braking.");
-                vehicle.Brake();
-            }
-            else if (NeedsAcceleration()) {
-                //Debug.Log("Way is clear. Accelerating...");
-                vehicle.Accelerate();
-            }
-            else {
-                // Coast...
-            }
-
-            SteerTowardsTarget();
+        if (ObstaclePresentInFront() || NeedsBraking()) {
+            //Debug.Log ("Obstacle detected! Braking.");
+            vehicle.Brake();
+        }
+        else if (NeedsAcceleration()) {
+            //Debug.Log("Way is clear. Accelerating...");
+            vehicle.Accelerate();
         }
         else {
-            if (NeedsAcceleration()) {
-                vehicle.Accelerate();
-            }
-            else if (NeedsBraking()) {
-                vehicle.Brake();
-            }
+            // Coast...
         }
+
+        SteerTowardsTarget();
     }
 
     private void JoinLane(Vector3 direction) {
@@ -284,7 +276,7 @@ public class DrivingAgent : MonoBehaviour {
     }
 
     public float GetOptimalFrontDistance() {
-        return MinimumFrontDistance + (FrontDistancePerSpeed * vehicle.GetCurrentSpeed());
+		return MinimumFrontDistance + (FrontDistancePerSpeed * Mathf.Pow(vehicle.GetCurrentSpeed(), 2));
     }
 
     public float GetMaximumFrontDistance() {
