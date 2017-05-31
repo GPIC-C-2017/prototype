@@ -1,0 +1,70 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[RequireComponent(typeof(Waypoint))]
+public class SpawnPoint : MonoBehaviour {
+    public int SpawnsPerMinute;
+    public bool EnableSpawning;
+
+    public GameObject VehiclePrefab;
+
+    private Waypoint wp;
+    private Vector3 directionToNeighbour;
+    private LaneConfiguration lc;
+    private Vector3[] laneLocs;
+    private Waypoint[] endWaypoints;
+    private float spawnDelay;
+
+    private TrafficControllerAgent TCA;
+
+    // Use this for initialization
+    void Start() {
+        wp = GetComponent<Waypoint>();
+        TCA = FindObjectOfType<TrafficControllerAgent>();
+        spawnDelay = Mathf.Pow(SpawnsPerMinute / 60f, -1);
+
+        directionToNeighbour = XVector3.Direction(wp.transform.position, wp.Neighbours[0].transform.position);
+        lc = TCA.GetLaneConfiguration(wp, wp.Neighbours[0]);
+
+        endWaypoints = TCA.GetEndWaypoints();
+
+        InitLanes();
+
+        StartCoroutine(WaitSpawn());
+    }
+
+    private void InitLanes() {
+        var lanes = new List<Vector3>();
+        for (int i = 0; i < lc.NumberOfLeftLanes(); i++) {
+            if (lc.LeftLaneOpen(i)) {
+                lanes.Add(CalculateLaneLocation(i));
+            }
+        }
+        laneLocs = lanes.ToArray();
+    }
+
+    // Update is called once per frame
+    void Update() {
+    }
+
+    IEnumerator WaitSpawn() {
+        while (EnableSpawning) {
+            yield return new WaitForSeconds(spawnDelay);
+            SpawnVehicle();
+        }
+    }
+
+    private void SpawnVehicle() {
+        var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity);
+        var navigationAgent = vehicle.GetComponent<NavigationAgent>();
+        navigationAgent.TCA = TCA;
+        navigationAgent.Destination = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
+    }
+
+    private Vector3 CalculateLaneLocation(int lane) {
+        var offset = DrivingAgent.GetLaneOffset(lane + 1);
+        var left = Vector3.Cross(Vector3.up, directionToNeighbour).normalized;
+        return wp.transform.position + left * offset;
+    }
+}

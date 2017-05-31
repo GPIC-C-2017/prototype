@@ -39,11 +39,11 @@ public class LaneConfiguration : MonoBehaviour {
 		}
 	}
 
-	public bool LeftLaneStatus(int index) {
+	public bool LeftLaneOpen(int index) {
 		return leftConf[index];
 	}
 	
-	public bool RightLaneStatus(int index) {
+	public bool RightLaneOpen(int index) {
 		return rightConf[index];
 	}
 

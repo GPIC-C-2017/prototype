@@ -31,7 +31,6 @@ namespace Search {
                     path.Add(node.Waypoint);
                     node = node.ParentNode;
                 }
-                path.Add(startNode.Waypoint);
                 path.Reverse();
             }
             return path;

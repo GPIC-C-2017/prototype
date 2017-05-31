@@ -51,7 +51,12 @@ public class NavigationAgent : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        if (DA.ReachedCurrentTarget()) NextTarget();
+        if (DA.ReachedCurrentTarget()) {
+            if (currentWaypoint == path.Length) {
+                Destroy(gameObject);
+            }
+            NextTarget();
+        }
     }
 
     // Sets the next target and updates the rest of the path accordingly

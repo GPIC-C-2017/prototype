@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Waypoint : MonoBehaviour {
     public Waypoint[] Neighbours;
+    public bool RoadEnd;
 
     void OnDrawGizmos() {
         Gizmos.color = Color.red;

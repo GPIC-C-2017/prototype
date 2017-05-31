@@ -98,14 +98,13 @@ public class DrivingAgent : MonoBehaviour {
     }
 
     private int GetChangeInLaneInt(DrivingAgentState state) {
-        if (state == DrivingAgentState.JoiningInternalLane) {
-            return -1;
-        }
-        else if (state == DrivingAgentState.JoiningExternalLane) {
-            return 1;
-        }
-        else {
-            return 0;
+        switch (state) {
+            case DrivingAgentState.JoiningInternalLane:
+                return -1;
+            case DrivingAgentState.JoiningExternalLane:
+                return 1;
+            default:
+                return 0;
         }
     }
 
@@ -350,7 +349,7 @@ public class DrivingAgent : MonoBehaviour {
     }
 
 
-    float GetLaneOffset(int lane) {
+    public static float GetLaneOffset(int lane) {
         float offset = ((lane - 1) * LanesWidth) + 0.5f * LanesWidth;
         return offset;
     }

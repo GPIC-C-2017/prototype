@@ -7,22 +7,32 @@ public class TrafficControllerAgent : MonoBehaviour {
     public GameObject WaypointContainer;
 
     private LaneConfiguration[] laneConfigurations;
+    private Waypoint[] endWaypoints;
 
-    // Use this for initialization
-    void Start() {
+    void Awake() {
         var lanes = new List<LaneConfiguration>();
+        var wps = new List<Waypoint>();
         foreach (Transform child in WaypointContainer.transform) {
             var lc = child.GetComponent<LaneConfiguration>();
+            var wp = child.GetComponent<Waypoint>();
             if (lc != null) {
                 lanes.Add(lc);
             }
+
+            if (wp != null && wp.RoadEnd) {
+                wps.Add(wp);
+            }
         }
         laneConfigurations = lanes.ToArray();
+        endWaypoints = wps.ToArray();
     }
 
     // Update is called once per frame
-
     void Update() {
+    }
+
+    public Waypoint[] GetEndWaypoints() {
+        return endWaypoints;
     }
 
     public Waypoint[] CalculatePath(Waypoint start, Waypoint end) {
