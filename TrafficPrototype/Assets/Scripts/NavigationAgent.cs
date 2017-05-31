@@ -17,7 +17,7 @@ public class NavigationAgent : MonoBehaviour {
     private DrivingAgent DA;
 
     private Waypoint[] path;
-    private int currentWaypoint;
+    private int headingToIndex = -1;
 
     private LaneConfiguration currentConf;
 
@@ -40,7 +40,7 @@ public class NavigationAgent : MonoBehaviour {
         // Update inner state, and feed the DrivingAgent with the first junction
         //  of the path.
         path = TCA.CalculatePath(ClosestWaypoint(), destinationNode.GetComponent<Waypoint>());
-        NextTarget();
+        UpdateTarget();
     }
 
     // Use this for initialization
@@ -52,48 +52,52 @@ public class NavigationAgent : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         if (DA.ReachedCurrentTarget()) {
-            if (currentWaypoint == path.Length) {
+            if (headingToIndex == path.Length) {
                 Destroy(gameObject);
                 return;
             }
-            NextTarget();
+            UpdateTarget();
         }
     }
 
     // Sets the next target and updates the rest of the path accordingly
-    void NextTarget() {
+    void UpdateTarget() {
         Waypoint fromWp;
         Vector3 fromLoc;
+
+        var previousIndex = headingToIndex;
+        headingToIndex++;
+
         // if there is no previous waypoint
-        if (currentWaypoint == 0) {
+        // i.e. approaching first target
+        if (headingToIndex == 0) {
             fromWp = ClosestWaypoint();
             fromLoc = gameObject.transform.position;
         }
         else {
-            fromWp = path[currentWaypoint - 1];
+            fromWp = path[previousIndex];
             fromLoc = fromWp.transform.position;
         }
 
-        var toWp = path[currentWaypoint];
+        var toWp = path[headingToIndex];
         var toLoc = toWp.transform.position;
 
         var heading = toLoc - fromLoc;
         var direction = heading / heading.magnitude;
 
         var lc = TCA.GetLaneConfiguration(fromWp, toWp);
-        
+
         Vector3 turnDirection;
         DA.SetLane(DetermineLane(lc, direction, out turnDirection));
 
         var nextLane = 0;
         if (turnDirection == Vector3.left) {
             nextLane = -1;
-        } else if (turnDirection == Vector3.right) {
+        }
+        else if (turnDirection == Vector3.right) {
             nextLane = 1;
         }
         DA.SetNextTarget(toLoc, direction, nextLane);
-
-        currentWaypoint++;
     }
 
     // wait a small delay before getting the path to the target
@@ -130,20 +134,19 @@ public class NavigationAgent : MonoBehaviour {
     int DetermineLane(LaneConfiguration lc, Vector3 direction, out Vector3 willTurn) {
         // there is no previous waypoint
         willTurn = Vector3.zero;
-        if (currentWaypoint == 0)
+        if (headingToIndex == 0)
             return 1;
 
         // if there is no next
-        if (currentWaypoint + 1 == path.Length)
+        if (headingToIndex + 1 == path.Length)
             return 1;
 
         if (lc.NumberOfLeftLanes() < 2)
             return 1;
 
-        var previous = path[currentWaypoint - 1].transform.position;
-        var current = path[currentWaypoint].transform.position;
-        var next = path[currentWaypoint + 1].transform.position;
-        
+        var previous = path[headingToIndex - 1].transform.position;
+        var next = path[headingToIndex + 1].transform.position;
+
         var heading = next - previous;
         var distance = heading.magnitude;
         var targetDir = heading / distance; // This is now the normalized direction.
@@ -153,6 +156,4 @@ public class NavigationAgent : MonoBehaviour {
         willTurn = relativeDir;
         return relativeDir == Vector3.left ? lc.LeftMost() : lc.RightMost();
     }
-
-
 }
