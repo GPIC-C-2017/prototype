@@ -52,7 +52,7 @@ public class NavigationAgent : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         if (DA.ReachedCurrentTarget()) {
-            if (headingToIndex == path.Length) {
+            if (headingToIndex == path.Length - 1) {
                 Destroy(gameObject);
                 return;
             }
