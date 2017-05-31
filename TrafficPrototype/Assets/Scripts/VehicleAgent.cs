@@ -20,10 +20,10 @@ public class VehicleAgent : MonoBehaviour {
 	public float steeringResponsiveness = 0.65f;
 
     [Range(10.0f, 500.0f)]
-    public float maxSteeringTorque = 100.0f;
+    public float maxSteeringTorque = 1000.0f;
 
     [Range(0.5f, 500.0f)]
-    public float minSteeringTorque = 0.5f;
+    public float minSteeringTorque = 1f;
 
     [Range (700.0f, 1100.0f)]
 	public float minimumVehicleTorque = 650.0f;
@@ -47,12 +47,20 @@ public class VehicleAgent : MonoBehaviour {
 
 	}	
 
+	public void SteerRight(float ratio) {
+		Steer (Vector3.right, ratio);
+	}
+		
 	public void SteerRight() {
-		Steer (Vector3.right);
+		Steer (Vector3.right, 1f);
+	}
+
+	public void SteerLeft(float ratio) {
+		Steer (Vector3.left, ratio);
 	}
 
 	public void SteerLeft() {
-		Steer (Vector3.left);
+		Steer (Vector3.left, 1f);
 	}
 
 	public float GetCurrentSpeed() {
@@ -77,23 +85,13 @@ public class VehicleAgent : MonoBehaviour {
 
 	private Rigidbody rb;
 
-	public void Steer(Vector3 direction) {
-
+	public void Steer(Vector3 direction, float ratio) {
 		Vector3 torqueDirection = direction == Vector3.right ? Vector3.up : Vector3.down; 
-		Vector3 rotation = torqueDirection * GetVehicleSteeringTorque () * Time.fixedDeltaTime;
+		Vector3 rotation = torqueDirection * GetVehicleSteeringTorque () * Time.fixedDeltaTime * ratio;
 		gameObject.transform.Rotate (rotation);
 
 		// Rotate the momentum vector
 		rb.velocity = gameObject.transform.forward * rb.velocity.magnitude;
-
-		return;
-
-		// TORQUE is a rotation force across the Y axis. Clockwise is positive (up), anticlockwise is negative (-up).
-		Vector3 torqueVector = torqueDirection * GetVehicleSteeringTorque () * Time.fixedDeltaTime;
-		rb.AddRelativeTorque (torqueVector);
-
-		Vector3 lateralForceVector = direction * GetVehicleSteeringTorque () * Time.fixedDeltaTime * lateralForceToTorqueRatio;
-		rb.AddRelativeForce (lateralForceVector);
 	}
 
 	/**
@@ -124,7 +122,7 @@ public class VehicleAgent : MonoBehaviour {
 	 * e^(-x), steer well at very low speeds, slowly at high speeds
 	 */
 	private float SteeringTorqueCurveFunction(float speedRatio) {
-        return 1f;
+        // return 1f;
 		return Mathf.Exp (-speedRatio);
 	}
 
