@@ -190,12 +190,10 @@ public class DrivingAgent : MonoBehaviour {
     private float DesiredSpeedCurve(float distance) {
         float targetApproachAbsoluteDistance = TargetApproachDistance * GetOptimalFrontDistance();
 		if (distance >= targetApproachAbsoluteDistance) {
-			Debug.Log ("Returning FULL SPEED");
             return 1;
         }
 		float remainingDistance = targetApproachAbsoluteDistance - distance;
 		remainingDistance /= targetApproachAbsoluteDistance; // 0...1
-		//float result = Mathf.Exp(-remainingDistance);
 		float result = 1 - remainingDistance;
 		if (result < TargetApproachMinRelativeSpeed)
             return TargetApproachMinRelativeSpeed;
