@@ -27,8 +27,8 @@ public class DrivingAgent : MonoBehaviour {
     public float FrontDistancePerSpeed = .10f;
 
     public bool EnableCollaborationFeatures = true;
-    public float TargetApproachDistance = 3.0f;
-    public float TargetApproachMinRelativeSpeed = 0.15f;
+    public float TargetApproachDistance = 1.0f;
+    public float TargetApproachMinRelativeSpeed = 0.35f;
 
     [Range(1, 3)] public int CurrentLane = 1;
 	private int nextLane = 0;
