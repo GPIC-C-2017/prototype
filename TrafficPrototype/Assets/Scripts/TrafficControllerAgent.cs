@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Search;
 using UnityEngine;
 
@@ -13,18 +12,25 @@ public class TrafficControllerAgent : MonoBehaviour {
     void Awake() {
         var lanes = new List<LaneConfiguration>();
         var wps = new List<Waypoint>();
+        
         foreach (Transform child in WaypointContainer.transform) {
             var lc = child.GetComponent<LaneConfiguration>();
-            var wp = child.GetComponent<Waypoint>();
             if (lc != null) {
                 lanes.Add(lc);
             }
 
+            var wp = child.GetComponent<Waypoint>();
             if (wp != null && wp.RoadEnd) {
                 wps.Add(wp);
             }
         }
+       
+        foreach (var lc in lanes.ToArray()) {
+            lanes.Add(CreateReverse(lc));
+        }
+        
         laneConfigurations = lanes;
+        
         endWaypoints = wps.ToArray();
     }
 
@@ -37,13 +43,13 @@ public class TrafficControllerAgent : MonoBehaviour {
     }
 
     public Waypoint[] CalculatePath(Waypoint start, Waypoint end) {
-        var path = AStar.FindPath(start, end, NextLocations);
+        var path = AStar.FindPath(start, end, w => w.Neighbours);
         return path.ToArray();
     }
 
     public LaneConfiguration GetLaneConfiguration(Waypoint from, Waypoint to) {
         LaneConfiguration lc;
-        return FindLaneConf(from, to, out lc) ? CorrectOrder(from, to, lc) : null;
+        return FindLaneConf(from, to, out lc) ? lc : null;
     }
 
     private bool FindLaneConf(Waypoint from, Waypoint to, out LaneConfiguration lc) {
@@ -52,38 +58,24 @@ public class TrafficControllerAgent : MonoBehaviour {
                 lc = laneConf;
                 return true;
             }
-
-            if (laneConf.From == to && laneConf.To == from) {
-                lc = laneConf;
-                return true;
-            } 
         }
-
         lc = default(LaneConfiguration);
         return false;
     }
 
-    private LaneConfiguration CorrectOrder(Waypoint from, Waypoint to, LaneConfiguration lc) {
-        if (lc.From == from && lc.To == to) {
-            return lc;
-        }
-        
-        var midPoint = (to.transform.position - from.transform.position) * 0.5f;
-        midPoint += from.transform.position;
+    private LaneConfiguration CreateReverse(LaneConfiguration lc) {
+        var midPoint = (lc.To.transform.position - lc.From.transform.position) * 0.5f;
+        midPoint += lc.From.transform.position;
         
         var nlcGameObject = Instantiate(LaneConfigurationPrefab, midPoint, Quaternion.identity, WaypointContainer.transform);
+        nlcGameObject.name = "LaneConfiguration-Reverse";
+        
         var nlc = nlcGameObject.GetComponent<LaneConfiguration>();
-        
-        laneConfigurations.Add(nlc);
-        
-        nlc.From = to;
-        nlc.To = from;
+        nlc.From = lc.To;
+        nlc.To = lc.From;
         nlc.LeftLanes = lc.RightLanes;
         nlc.RightLanes = lc.LeftLanes;
+        
         return nlc;
-    }
-
-    private Waypoint[] NextLocations(Waypoint w) {
-        return w.Neighbours.ToArray();
     }
 }

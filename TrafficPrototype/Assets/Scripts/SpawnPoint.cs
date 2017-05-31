@@ -66,6 +66,6 @@ public class SpawnPoint : MonoBehaviour {
     private Vector3 CalculateLaneLocation(int lane) {
         var offset = DrivingAgent.GetLaneOffset(lane + 1);
         var left = Vector3.Cross(Vector3.up, directionToNeighbour).normalized;
-        return wp.transform.position + left * offset;
+        return wp.transform.position - left * offset;
     }
 }
