@@ -77,7 +77,7 @@ public class NavigationAgent : MonoBehaviour {
         var toWp = path[currentWaypoint];
         var toLoc = toWp.transform.position;
 
-        var heading = fromLoc - toLoc;
+        var heading = toLoc - fromLoc;
         var direction = heading / heading.magnitude;
 
         var lc = TCA.GetLaneConfiguration(fromWp, toWp);
