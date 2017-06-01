@@ -327,23 +327,26 @@ public class DrivingAgent : MonoBehaviour {
         }
     }
 
-	private Vector3 GenerateLaneAdjustedTarget(Vector3 direction, int lane, int nextLane) {
+	private Vector3 GenerateLaneAdjustedTarget(Vector3 direction, int lane, int laneAtNextJunction) {
         Vector3 laneAdjustedTargetPosition;
 
 		var right = Vector3.Cross(currentTargetDirection, Vector3.down).normalized;
-		nextLane = direction == Vector3.left ? -nextLane : nextLane;
+	    
+	    laneAtNextJunction = direction == Vector3.left ? -laneAtNextJunction : laneAtNextJunction;
 
-        if (direction == Vector3.left) {
-            laneAdjustedTargetPosition = currentTarget - right * GetLaneOffset(lane);
-        } else {
-            laneAdjustedTargetPosition = currentTarget + right * GetLaneOffset(lane);
-        }
-
-	    if (nextLane != 0) {
-	        laneAdjustedTargetPosition += nextLane * currentTargetDirection 
-	                                      * GetLaneOffset (Mathf.Abs(nextLane));
+	    Debug.Log(lane);
+	    
+	    if (direction == Vector3.left) {
+	        laneAdjustedTargetPosition = currentTarget - (right * GetLaneOffset(lane));
+	        
+	    } else {
+	        laneAdjustedTargetPosition = currentTarget + (right * GetLaneOffset(lane));
 	    }
-			
+
+
+	    if (nextLane != 0)
+	        laneAdjustedTargetPosition += laneAtNextJunction * currentTargetDirection 
+	                                      * GetLaneOffset (Mathf.Abs(laneAtNextJunction));
 		
         return laneAdjustedTargetPosition;
     }
