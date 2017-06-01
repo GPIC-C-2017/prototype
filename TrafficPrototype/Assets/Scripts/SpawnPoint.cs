@@ -6,6 +6,7 @@ using UnityEngine;
 public class SpawnPoint : MonoBehaviour {
     public int SpawnsPerMinute;
     public bool EnableSpawning;
+    public int MaxVehiclesSpawned;
 
     public GameObject VehiclePrefab;
 
@@ -15,6 +16,7 @@ public class SpawnPoint : MonoBehaviour {
     private Vector3[] laneLocs;
     private Waypoint[] endWaypoints;
     private float spawnDelay;
+    private int vehiclesSpawned;
 
     private TrafficControllerAgent TCA;
 
@@ -52,6 +54,9 @@ public class SpawnPoint : MonoBehaviour {
         while (EnableSpawning) {
             yield return new WaitForSeconds(spawnDelay);
             SpawnVehicle();
+            if (MaxVehiclesSpawned > 0) {
+                EnableSpawning = vehiclesSpawned != MaxVehiclesSpawned;    
+            }
         }
     }
 
@@ -61,6 +66,7 @@ public class SpawnPoint : MonoBehaviour {
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
         navigationAgent.TCA = TCA;
         navigationAgent.Destination = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
+        vehiclesSpawned++;
     }
 
     private Vector3 CalculateLaneLocation(int lane) {

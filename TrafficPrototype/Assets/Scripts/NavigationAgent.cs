@@ -141,9 +141,6 @@ public class NavigationAgent : MonoBehaviour {
         if (headingToIndex + 1 == path.Length)
             return 1;
 
-        if (lc.NumberOfLeftLanes() < 2)
-            return 1;
-
         var previous = path[headingToIndex - 1].transform.position;
         var next = path[headingToIndex + 1].transform.position;
 
