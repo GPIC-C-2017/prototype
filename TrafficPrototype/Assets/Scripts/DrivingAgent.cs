@@ -40,7 +40,7 @@ public class DrivingAgent : MonoBehaviour {
 
     private Vector3 currentTarget;
 
-    private const float DistanceThreshold = .5f;
+    private const float DistanceThreshold = .8f;
 
     [Range(0.01f, 0.9f)] public float LaneMergingMinRelativeSpeed = 0.1f;
 
@@ -52,6 +52,7 @@ public class DrivingAgent : MonoBehaviour {
     public DrivingAgentState CurrentState = DrivingAgentState.Driving;
 
     private VehicleAgent vehicle;
+    private NavigationAgent navigator;
     private Vector3 currentTargetDirection;
     
 	public void SetNextTarget(Vector3 target, Vector3 targetDirection, int nextLaneNumber) {
@@ -71,6 +72,7 @@ public class DrivingAgent : MonoBehaviour {
     // Use this for initialization
     void Start() {
         vehicle = gameObject.GetComponent<VehicleAgent>();
+        navigator = gameObject.GetComponent<NavigationAgent>();
     }
 
     void OnDrawGizmos() {
@@ -170,8 +172,12 @@ public class DrivingAgent : MonoBehaviour {
         return (Mathf.Sin(2f * Mathf.PI * (distance - 1f / 4f)) + 1f) / 2f;
     }
 
+    public float GetTargetApproachAbsoluteDistance() {
+        return TargetApproachDistance * GetOptimalFrontDistance();
+    }
+    
     private float DesiredSpeedCurve(float distance) {
-        float targetApproachAbsoluteDistance = TargetApproachDistance * GetOptimalFrontDistance();
+        float targetApproachAbsoluteDistance = GetTargetApproachAbsoluteDistance();
 		if (distance >= targetApproachAbsoluteDistance) {
             return 1;
         }
@@ -369,6 +375,12 @@ public class DrivingAgent : MonoBehaviour {
     public bool ReachedCurrentTarget() {
         var distance = Vector3.Distance(transform.position, GetLaneAdjustedTarget());
         return distance <= DistanceThreshold;
+    }
+
+    
+    public bool IsAtJunction(float radius) {
+        var distance = Vector3.Distance(transform.position, navigator.ClosestWaypoint().transform.position);
+        return distance < radius;
     }
 
     public float GetLaneMergingMinSpeed() {

@@ -107,7 +107,7 @@ public class NavigationAgent : MonoBehaviour {
         if (Destination != null) RequestPathTo(Destination.gameObject);
     }
 
-    Waypoint ClosestWaypoint() {
+    public Waypoint ClosestWaypoint() {
         var nearbyWaypoints = FindObjectsOfType<Waypoint>();
 
         Waypoint closest = nearbyWaypoints[0];

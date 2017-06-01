@@ -19,8 +19,8 @@ public class VehicleAgent : MonoBehaviour {
 	[Range (0.05f, 1.0f)]
 	public float steeringResponsiveness = 0.65f;
 
-    [Range(10.0f, 500.0f)]
-    public float maxSteeringTorque = 1000.0f;
+    [Range(10.0f, 2000.0f)]
+    public float maxSteeringTorque = 1500.0f;
 
     [Range(0.5f, 500.0f)]
     public float minSteeringTorque = 1f;
