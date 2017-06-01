@@ -10,9 +10,6 @@ public class SelfDestroyOnRoll : MonoBehaviour {
 	void Update () {
 		if (IsOverThreshold(gameObject.transform.rotation.eulerAngles.x)
 		    || IsOverThreshold(gameObject.transform.rotation.eulerAngles.z)) {
-			Debug.Log("-");
-			Debug.Log(gameObject.transform.rotation.eulerAngles.x);
-			Debug.Log(gameObject.transform.rotation.eulerAngles.z);
 			Destroy(gameObject);
 		}
 	}

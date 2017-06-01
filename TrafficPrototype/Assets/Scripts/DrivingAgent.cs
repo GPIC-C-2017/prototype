@@ -70,7 +70,7 @@ public class DrivingAgent : MonoBehaviour {
     }
 
     // Use this for initialization
-    void Start() {
+    void Awake() {
         vehicle = gameObject.GetComponent<VehicleAgent>();
         navigator = gameObject.GetComponent<NavigationAgent>();
     }

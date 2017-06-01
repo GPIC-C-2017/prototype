@@ -19,11 +19,16 @@ public class SpawnPoint : MonoBehaviour {
     private int vehiclesSpawned;
 
     private TrafficControllerAgent TCA;
+    private GameObject trafficContainer;
+
+    void Awake() {
+        wp = GetComponent<Waypoint>();
+        TCA = FindObjectOfType<TrafficControllerAgent>();
+        trafficContainer = GameObject.FindGameObjectWithTag("TrafficContainer");
+    }
 
     // Use this for initialization
     void Start() {
-        wp = GetComponent<Waypoint>();
-        TCA = FindObjectOfType<TrafficControllerAgent>();
         spawnDelay = Mathf.Pow(SpawnsPerMinute / 60f, -1);
 
         directionToNeighbour = XVector3.Direction(wp.transform.position, wp.Neighbours[0].transform.position);
@@ -61,13 +66,22 @@ public class SpawnPoint : MonoBehaviour {
     }
 
     private void SpawnVehicle() {
-        var traffic = GameObject.FindGameObjectWithTag("TrafficContainer");
-        var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity, traffic.transform);
+        var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity, trafficContainer.transform);
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
         navigationAgent.TCA = TCA;
-        navigationAgent.Destination = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
+        navigationAgent.Destination = RandomWaypointBesideCurrent();
+        navigationAgent.StartingPoint = wp;
         vehicle.transform.LookAt(wp.Neighbours[0].transform);
         vehiclesSpawned++;
+    }
+
+    private Waypoint RandomWaypointBesideCurrent() {
+        var random = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
+        while (wp == random) {
+            random = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
+        }
+
+        return random;
     }
 
     private Vector3 CalculateLaneLocation(int lane) {

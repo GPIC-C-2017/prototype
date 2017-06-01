@@ -11,12 +11,14 @@ using UnityEngine;
  */
 [RequireComponent(typeof(DrivingAgent))]
 public class NavigationAgent : MonoBehaviour {
+    public Waypoint StartingPoint;
     public Waypoint Destination;
 
     public TrafficControllerAgent TCA;
     private DrivingAgent DA;
+    private PerformanceMeasurer PF;
 
-    private Waypoint[] path;
+    public Waypoint[] path;
     private int headingToIndex = -1;
 
     private LaneConfiguration currentConf;
@@ -34,27 +36,37 @@ public class NavigationAgent : MonoBehaviour {
         // (i.e. should require the vehicle to do a U-turn).
     }
 
-    public void RequestPathTo(GameObject destinationNode) {
+    public void RequestPathTo(Waypoint start, GameObject destinationNode) {
         // Request path from the current position, to the destination node.
-        path = TCA.CalculatePath(ClosestWaypoint(), destinationNode.GetComponent<Waypoint>());
+        path = TCA.CalculatePath(start, destinationNode.GetComponent<Waypoint>());
         // Update inner state, and feed the DrivingAgent with the first junction
         // of the path.
         UpdateTarget();
     }
 
     // Use this for initialization
-    void Start() {
+    void Awake() {
         DA = GetComponent<DrivingAgent>();
-        if (Destination != null)
-            RequestPathTo(Destination.gameObject);
-        else
+        PF = FindObjectOfType<PerformanceMeasurer>();
+    }
+
+    void Start() {
+        if (Destination != null) {
+            if (StartingPoint == null) {
+                StartingPoint = ClosestWaypoint();
+            }
+            RequestPathTo(StartingPoint, Destination.gameObject);
+        }
+        else {
             Destroy(this);
+        }
     }
 
     // Update is called once per frame
     void Update() {
         if (DA.ReachedCurrentTarget()) {
             if (headingToIndex == path.Length - 1) {
+                PF.ReachedTarget();
                 Destroy(gameObject);
                 return;
             }

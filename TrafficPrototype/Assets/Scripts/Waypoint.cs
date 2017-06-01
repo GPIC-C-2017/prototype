@@ -10,7 +10,7 @@ public class Waypoint : MonoBehaviour {
     private const float WaypointScale = 1f;
 
     void OnDrawGizmos() {
-        Gizmos.color = Color.red;
+        Gizmos.color = Color.green;
         if (Selection.activeGameObject == gameObject) {
             return;
         }
