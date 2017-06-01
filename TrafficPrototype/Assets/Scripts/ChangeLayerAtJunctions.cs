@@ -6,12 +6,12 @@ using UnityEngine;
 [RequireComponent (typeof (DrivingAgent))]
 public class ChangeLayerAtJunctions : MonoBehaviour {
 
-	public const bool avoidCollisionsAtJunctions = true;
+	public const bool AvoidCollisionsAtJunctions = true;
 
-	public float junctionsRadius = 10.0f;
+	public float JunctionsRadius = 10.0f;
 
-	public const string vehiclesOnRoadsLayer = "VehiclesOnRoads";
-	public const string vehiclesAtJunctionsLayer = "VehiclesAtJunctions";
+	public const string VehiclesOnRoadsLayer = "VehiclesOnRoads";
+	public const string VehiclesAtJunctionsLayer = "VehiclesAtJunctions";
 
 	private int vehiclesOnRoadsLayerMask;
 	private int vehiclesAtJunctionsLayerMask;
@@ -22,10 +22,10 @@ public class ChangeLayerAtJunctions : MonoBehaviour {
 	void Start () {
 		vehicle = gameObject.GetComponent<DrivingAgent>();
 		
-		vehiclesAtJunctionsLayerMask = LayerMask.NameToLayer(vehiclesAtJunctionsLayer);
-		vehiclesOnRoadsLayerMask = LayerMask.NameToLayer(vehiclesOnRoadsLayer);
+		vehiclesAtJunctionsLayerMask = LayerMask.NameToLayer(VehiclesAtJunctionsLayer);
+		vehiclesOnRoadsLayerMask = LayerMask.NameToLayer(VehiclesOnRoadsLayer);
 		
-		if (avoidCollisionsAtJunctions)
+		if (AvoidCollisionsAtJunctions)
 			Physics.IgnoreLayerCollision(
 				vehiclesAtJunctionsLayerMask, 
 				vehiclesAtJunctionsLayerMask
@@ -35,19 +35,15 @@ public class ChangeLayerAtJunctions : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-
 		if (VehicleAtJunction()) {
 			gameObject.layer = vehiclesAtJunctionsLayerMask;
-
 		} else {
 			gameObject.layer = vehiclesOnRoadsLayerMask;
-
 		}
-
 	}
 
 	private bool VehicleAtJunction() {
-		return vehicle.IsAtJunction(junctionsRadius);
+		return vehicle.IsAtJunction(JunctionsRadius);
 	}
 	
 }

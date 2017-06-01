@@ -377,7 +377,6 @@ public class DrivingAgent : MonoBehaviour {
         return distance <= DistanceThreshold;
     }
 
-    
     public bool IsAtJunction(float radius) {
         var distance = Vector3.Distance(transform.position, navigator.ClosestWaypoint().transform.position);
         return distance < radius;

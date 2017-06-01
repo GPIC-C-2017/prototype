@@ -35,18 +35,20 @@ public class NavigationAgent : MonoBehaviour {
     }
 
     public void RequestPathTo(GameObject destinationNode) {
-        // TODO
         // Request path from the current position, to the destination node.
-        // Update inner state, and feed the DrivingAgent with the first junction
-        //  of the path.
         path = TCA.CalculatePath(ClosestWaypoint(), destinationNode.GetComponent<Waypoint>());
+        // Update inner state, and feed the DrivingAgent with the first junction
+        // of the path.
         UpdateTarget();
     }
 
     // Use this for initialization
     void Start() {
         DA = GetComponent<DrivingAgent>();
-        StartCoroutine(WaitAndGetPath());
+        if (Destination != null)
+            RequestPathTo(Destination.gameObject);
+        else
+            Destroy(this);
     }
 
     // Update is called once per frame
@@ -100,15 +102,8 @@ public class NavigationAgent : MonoBehaviour {
         DA.SetNextTarget(toLoc, direction, nextLane);
     }
 
-    // wait a small delay before getting the path to the target
-    // this ensures that the TCA has enough time to initiliase
-    IEnumerator WaitAndGetPath() {
-        yield return new WaitForSeconds(0.1f);
-        if (Destination != null) RequestPathTo(Destination.gameObject);
-    }
-
     public Waypoint ClosestWaypoint() {
-        var nearbyWaypoints = FindObjectsOfType<Waypoint>();
+        var nearbyWaypoints = TCA.GetWaypoints();
 
         Waypoint closest = nearbyWaypoints[0];
         var distance = Mathf.Infinity;
@@ -131,7 +126,7 @@ public class NavigationAgent : MonoBehaviour {
     //  |
     // (1)
     // when travelling (1) -> (2), we'll need to keep to the right-most lane as we'll be turning right.
-    int DetermineLane(LaneConfiguration lc, Vector3 direction, out Vector3 willTurn) {
+    private int DetermineLane(LaneConfiguration lc, Vector3 direction, out Vector3 willTurn) {
         // there is no previous waypoint
         willTurn = Vector3.zero;
         if (headingToIndex == 0)

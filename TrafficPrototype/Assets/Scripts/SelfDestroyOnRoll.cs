@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SelfDestroyOnRoll : MonoBehaviour {
 
-	public float rotationThreshold = 2f;
+	public float RotationThreshold = 2f;
 	
 	// Update is called once per frame
 	void Update () {
@@ -18,7 +18,7 @@ public class SelfDestroyOnRoll : MonoBehaviour {
 	}
 
 	private bool IsOverThreshold(float eulerAngle) {
-		return !(eulerAngle > 360 - rotationThreshold ||
-				 eulerAngle < rotationThreshold) ;
+		return !(eulerAngle > 360 - RotationThreshold ||
+				 eulerAngle < RotationThreshold) ;
 	}
 }

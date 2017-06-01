@@ -8,10 +8,12 @@ public class TrafficControllerAgent : MonoBehaviour {
 
     private List<LaneConfiguration> laneConfigurations;
     private Waypoint[] endWaypoints;
+    private Waypoint[] waypointsCache;
 
     void Awake() {
         var lanes = new List<LaneConfiguration>();
-        var wps = new List<Waypoint>();
+        var _endWaypoints = new List<Waypoint>();
+        var waypoints = new List<Waypoint>();
         
         foreach (Transform child in WaypointContainer.transform) {
             var lc = child.GetComponent<LaneConfiguration>();
@@ -20,8 +22,14 @@ public class TrafficControllerAgent : MonoBehaviour {
             }
 
             var wp = child.GetComponent<Waypoint>();
-            if (wp != null && wp.RoadEnd) {
-                wps.Add(wp);
+            if (wp != null) {
+                if (wp.RoadEnd) {
+                    _endWaypoints.Add(wp);
+                }
+                else {
+                    waypoints.Add(wp);
+                }
+                
             }
         }
        
@@ -30,16 +38,17 @@ public class TrafficControllerAgent : MonoBehaviour {
         }
         
         laneConfigurations = lanes;
-        
-        endWaypoints = wps.ToArray();
-    }
 
-    // Update is called once per frame
-    void Update() {
+        endWaypoints = _endWaypoints.ToArray();
+        waypointsCache = waypoints.ToArray();
     }
 
     public Waypoint[] GetEndWaypoints() {
         return endWaypoints;
+    }
+
+    public Waypoint[] GetWaypoints() {
+        return waypointsCache;
     }
 
     public Waypoint[] CalculatePath(Waypoint start, Waypoint end) {
