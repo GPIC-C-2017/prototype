@@ -6,13 +6,15 @@ using UnityEngine;
 public class Waypoint : MonoBehaviour {
     public Waypoint[] Neighbours;
     public bool RoadEnd;
+    
+    private const float WaypointScale = 1f;
 
     void OnDrawGizmos() {
         Gizmos.color = Color.red;
         if (Selection.activeGameObject == gameObject) {
             return;
         }
-        Gizmos.DrawCube(transform.position, new Vector3(0.1f, 0.1f, 0.1f));
+        Gizmos.DrawCube(transform.position, new Vector3(WaypointScale, WaypointScale, WaypointScale));
         foreach (var neighbour in Neighbours) {
             if (neighbour != null) {
                 Gizmos.DrawLine(transform.position, neighbour.transform.position);
@@ -22,7 +24,7 @@ public class Waypoint : MonoBehaviour {
 
     void OnDrawGizmosSelected() {
         Gizmos.color = Color.yellow;
-        Gizmos.DrawCube(transform.position, new Vector3(0.1f, 0.1f, 0.1f));
+        Gizmos.DrawCube(transform.position, new Vector3(WaypointScale, WaypointScale, WaypointScale));
         foreach (var neighbour in Neighbours) {
             if (neighbour != null) {
                 Gizmos.DrawLine(transform.position, neighbour.transform.position);

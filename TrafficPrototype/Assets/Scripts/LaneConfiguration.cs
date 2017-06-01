@@ -44,7 +44,7 @@ public class LaneConfiguration : MonoBehaviour {
 		return RightLanes.Length;
 	}
 
-	public int RightMost() {
+	public int LeftMost() {
 		for (int i = 0; i < LeftLanes.Length; i++) {
 			if (LeftLanes[i] == LaneEnabled) {
 				return i + 1;
@@ -54,7 +54,7 @@ public class LaneConfiguration : MonoBehaviour {
 		throw new ArgumentOutOfRangeException();
 	}
 	
-	public int LeftMost() {
+	public int RightMost() {
 		for (int i = LeftLanes.Length - 1; i >= 0; i--) {
 			if (LeftLanes[i] == LaneEnabled) {
 				return i + 1;
