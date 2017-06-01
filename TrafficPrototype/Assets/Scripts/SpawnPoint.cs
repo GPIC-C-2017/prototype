@@ -66,6 +66,7 @@ public class SpawnPoint : MonoBehaviour {
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
         navigationAgent.TCA = TCA;
         navigationAgent.Destination = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
+        vehicle.transform.LookAt(wp.Neighbours[0].transform);
         vehiclesSpawned++;
     }
 

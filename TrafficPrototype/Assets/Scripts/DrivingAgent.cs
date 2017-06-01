@@ -33,7 +33,7 @@ public class DrivingAgent : MonoBehaviour {
     [Range(1, 3)] public int CurrentLane = 1;
 	private int nextLane = 0;
 
-    public const float LanesWidth = 3.5f; // Width of single lanes
+    public const float LanesWidth = 2f; // Width of single lanes
     [Range(0.15f, 0.9f)] public const float LaneMergingError = 0.005f; // Tolerated error when merging lane
     [Range(0.1f, 0.8f)] public const float LaneMergingMaxSteeringAngle = 0.30f;
     public Vector3 TrafficDirection = Vector3.left; // Left for UK/Japan traffic, Right for intl.
