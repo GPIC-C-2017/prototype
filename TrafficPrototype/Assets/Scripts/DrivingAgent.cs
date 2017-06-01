@@ -333,8 +333,6 @@ public class DrivingAgent : MonoBehaviour {
 		var right = Vector3.Cross(currentTargetDirection, Vector3.down).normalized;
 	    
 	    laneAtNextJunction = direction == Vector3.left ? -laneAtNextJunction : laneAtNextJunction;
-
-	    Debug.Log(lane);
 	    
 	    if (direction == Vector3.left) {
 	        laneAdjustedTargetPosition = currentTarget - (right * GetLaneOffset(lane));
