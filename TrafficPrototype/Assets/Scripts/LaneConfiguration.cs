@@ -9,21 +9,10 @@ public class LaneConfiguration : MonoBehaviour {
 	public string LeftLanes = "1";
 	public string RightLanes = "1";
 
-	private BitVector32 leftConf;
-	private BitVector32 rightConf;
+	public const char LaneEnabled = '1';
+	public const char LaneDisabled = '0';
 
 	void Start() {
-		leftConf = CreateBitVector(LeftLanes);
-		rightConf = CreateBitVector(RightLanes);
-	}
-
-	BitVector32 CreateBitVector(string conf) {
-		var vector = new BitVector32();
-		for (var i = 0; i < conf.Length; i++) {
-			var i1 = int.Parse(conf[i].ToString());
-			vector[i] = i1 == 1;
-		}
-		return vector;
 	}
 
 	void OnDrawGizmos() {
@@ -40,11 +29,11 @@ public class LaneConfiguration : MonoBehaviour {
 	}
 
 	public bool LeftLaneOpen(int index) {
-		return leftConf[index];
+		return LeftLanes[index] == LaneEnabled;
 	}
 	
 	public bool RightLaneOpen(int index) {
-		return rightConf[index];
+		return RightLanes[index] == LaneEnabled;
 	}
 
 	public int NumberOfLeftLanes() {
@@ -57,21 +46,21 @@ public class LaneConfiguration : MonoBehaviour {
 
 	public int RightMost() {
 		for (int i = 0; i < LeftLanes.Length; i++) {
-			if (leftConf[i]) {
+			if (LeftLanes[i] == LaneEnabled) {
 				return i + 1;
 			}
 		}
 
-		return -1;
+		throw new ArgumentOutOfRangeException();
 	}
 	
 	public int LeftMost() {
-		for (int i = LeftLanes.Length - 1; i != 0; i--) {
-			if (leftConf[i]) {
+		for (int i = LeftLanes.Length - 1; i >= 0; i--) {
+			if (LeftLanes[i] == LaneEnabled) {
 				return i + 1;
 			}
 		}
 
-		return -1;
+		throw new ArgumentOutOfRangeException();
 	}
 }
