@@ -69,6 +69,8 @@ public class WaypointExt : Editor {
                 waypoint.AddNeighbour(wayp);
             }
         }
+        
+        ConfigureLanes(selected);
     }
 
     List<Waypoint> SelectedWaypoints() {
