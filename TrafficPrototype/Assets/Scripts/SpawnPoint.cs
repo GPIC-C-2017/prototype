@@ -90,9 +90,6 @@ public class SpawnPoint : MonoBehaviour {
                    gameObject.transform.position,
                    lastSpawnedVehicle.transform.position);
         bool isClear = distance > lastSpawnedVehicle.GetComponent<Collider>().bounds.size.z * 1.3f;
-        if (!isClear) {
-            Debug.Log(distance);
-        }
         return !isClear;
     }
 
