@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 public class Waypoint : MonoBehaviour {
@@ -11,9 +10,6 @@ public class Waypoint : MonoBehaviour {
 
     void OnDrawGizmos() {
         Gizmos.color = Color.green;
-        if (Selection.activeGameObject == gameObject) {
-            return;
-        }
         Gizmos.DrawCube(transform.position, new Vector3(WaypointScale, WaypointScale, WaypointScale));
         foreach (var neighbour in Neighbours) {
             if (neighbour != null) {
