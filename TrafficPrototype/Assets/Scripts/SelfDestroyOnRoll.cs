@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent (typeof (NavigationAgent))]
 public class SelfDestroyOnRoll : MonoBehaviour {
 
 	public float RotationThreshold = 2f;
@@ -10,7 +11,7 @@ public class SelfDestroyOnRoll : MonoBehaviour {
 	void Update () {
 		if (IsOverThreshold(gameObject.transform.rotation.eulerAngles.x)
 		    || IsOverThreshold(gameObject.transform.rotation.eulerAngles.z)) {
-			Destroy(gameObject);
+			gameObject.GetComponent<NavigationAgent>().DestroyAndRespawnAtRandomWaypoint();
 		}
 	}
 

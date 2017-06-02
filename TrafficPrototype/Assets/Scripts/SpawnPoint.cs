@@ -71,7 +71,7 @@ public class SpawnPoint : MonoBehaviour {
         }
     }
 
-    private void SpawnVehicle() {
+    public void SpawnVehicle() {
         var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity, trafficContainer.transform);
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
         navigationAgent.TCA = TCA;

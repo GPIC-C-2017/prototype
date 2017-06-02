@@ -67,11 +67,46 @@ public class NavigationAgent : MonoBehaviour {
         if (DA.ReachedCurrentTarget()) {
             if (headingToIndex == path.Length - 1) {
                 PF.ReachedTarget();
-                Destroy(gameObject);
+                DestroyAndRespawnAtRandomWaypoint();
                 return;
             }
             UpdateTarget();
         }
+    }
+
+    private Waypoint GetRandomSpawnPoint() {
+        int index = Random.Range(0, TCA.GetSpawnPoints().Length - 1);
+        return TCA.GetSpawnPoints()[index];
+    }
+
+    private Waypoint GetClosestSpawnPoint() {
+        var nearbyWaypoints = TCA.GetSpawnPoints();
+        Waypoint closest = nearbyWaypoints[0];
+        var distance = Mathf.Infinity;
+        foreach (var waypoint in nearbyWaypoints) {
+            var diff = transform.position - waypoint.transform.position;
+            var curDistance = diff.sqrMagnitude;
+            if (curDistance < distance) {
+                closest = waypoint;
+                distance = curDistance;
+            }
+        }
+        return closest;
+    }
+
+    private void RequestSpawnFromWaypoint(Waypoint w) {
+        SpawnPoint s = w.GetComponent<SpawnPoint>();
+        s.SpawnVehicle();
+    }
+
+    public void DestroyAndRespawnAtRandomWaypoint() {
+        RequestSpawnFromWaypoint(GetRandomSpawnPoint());
+        Destroy(gameObject);
+    }
+
+    public void DestroyAndRespawnAtClosestWaypoint() {
+        RequestSpawnFromWaypoint(GetClosestSpawnPoint());
+        Destroy(gameObject);
     }
 
     // Sets the next target and updates the rest of the path accordingly
