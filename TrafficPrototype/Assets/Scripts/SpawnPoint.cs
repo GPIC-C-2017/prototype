@@ -10,7 +10,7 @@ public class SpawnPoint : MonoBehaviour {
 
     public GameObject VehiclePrefab;
 
-    public static int GlobalRatio = 1;
+    public static float GlobalRatio = 1f;
 
     private Waypoint wp;
     private Vector3 directionToNeighbour;
@@ -22,6 +22,7 @@ public class SpawnPoint : MonoBehaviour {
 
     private TrafficControllerAgent TCA;
     private GameObject trafficContainer;
+    private GameObject lastSpawnedVehicle;
 
     void Awake() {
         wp = GetComponent<Waypoint>();
@@ -72,6 +73,30 @@ public class SpawnPoint : MonoBehaviour {
     }
 
     public void SpawnVehicle() {
+        StartCoroutine(SpawnWhenClear());
+    }
+
+    IEnumerator SpawnWhenClear() {
+        while (SpawnPointIsNotClear()) {
+            yield return new WaitForSeconds(0.5f);
+        }
+        ForceSpawnVehicle();
+    }
+
+    private bool SpawnPointIsNotClear() {
+        if (lastSpawnedVehicle == null)
+            return false;
+        float distance =  Vector3.Distance(
+                   gameObject.transform.position,
+                   lastSpawnedVehicle.transform.position);
+        bool isClear = distance > lastSpawnedVehicle.GetComponent<Collider>().bounds.size.z * 1.3f;
+        if (!isClear) {
+            Debug.Log(distance);
+        }
+        return !isClear;
+    }
+
+    private void ForceSpawnVehicle() {
         var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity, trafficContainer.transform);
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
         navigationAgent.TCA = TCA;
@@ -79,6 +104,7 @@ public class SpawnPoint : MonoBehaviour {
         navigationAgent.StartingPoint = wp;
         vehicle.transform.LookAt(wp.Neighbours[0].transform);
         vehiclesSpawned++;
+        lastSpawnedVehicle = vehicle;
     }
 
     private Waypoint RandomWaypointBesideCurrent() {
