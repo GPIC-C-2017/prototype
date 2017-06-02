@@ -8,7 +8,7 @@ using UnityEngine;
 public class SelfDestroyOnStopping : MonoBehaviour {
 
 	public float MinSpeedThreshold = 1f;
-	public float DestroyTimer = 2f;
+	public float DestroyTimer = 3f;
 
 	private VehicleAgent vehicle;
 	
