@@ -10,6 +10,8 @@ public class SpawnPoint : MonoBehaviour {
 
     public GameObject VehiclePrefab;
 
+    public static int GlobalRatio = 1;
+
     private Waypoint wp;
     private Vector3 directionToNeighbour;
     private LaneConfiguration lc;
@@ -29,7 +31,7 @@ public class SpawnPoint : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-        spawnDelay = Mathf.Pow(SpawnsPerMinute / 60f, -1);
+        spawnDelay = Mathf.Pow(SpawnsPerMinute * GlobalRatio / 60f, -1);
 
         directionToNeighbour = XVector3.Direction(wp.transform.position, wp.Neighbours[0].transform.position);
         lc = TCA.GetLaneConfiguration(wp, wp.Neighbours[0]);
@@ -40,6 +42,7 @@ public class SpawnPoint : MonoBehaviour {
 
         StartCoroutine(WaitSpawn());
     }
+
 
     private void InitLanes() {
         var lanes = new List<Vector3>();
@@ -53,6 +56,9 @@ public class SpawnPoint : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        // Recalculate spawn delay to allow for runtime changes to values
+        spawnDelay = Mathf.Pow(SpawnsPerMinute * GlobalRatio / 60f, -1);
+
     }
 
     IEnumerator WaitSpawn() {
