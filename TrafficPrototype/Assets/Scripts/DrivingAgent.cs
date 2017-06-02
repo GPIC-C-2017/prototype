@@ -69,6 +69,10 @@ public class DrivingAgent : MonoBehaviour {
         CurrentLane = lane;
     }
 
+    public void SetNextLane(int n) {
+        nextLane = n;
+    }
+
     // Use this for initialization
     void Awake() {
         vehicle = gameObject.GetComponent<VehicleAgent>();

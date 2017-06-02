@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 /**
  * This is the agent which represents the navigation abilities of the vehicle,
@@ -22,6 +24,8 @@ public class NavigationAgent : MonoBehaviour {
     private int headingToIndex = -1;
 
     private LaneConfiguration currentConf;
+
+    private DateTime created;
 
     /**
      * This method is called by the DrivingAgent when it spots a permanent obstruction
@@ -51,6 +55,7 @@ public class NavigationAgent : MonoBehaviour {
     }
 
     void Start() {
+        created = DateTime.Now;
         if (Destination != null) {
             if (StartingPoint == null) {
                 StartingPoint = ClosestWaypoint();
@@ -60,13 +65,19 @@ public class NavigationAgent : MonoBehaviour {
         else {
             Destroy(this);
         }
+        
+    }
+
+    public TimeSpan JourneySecondsElapsed() {
+        return DateTime.Now - created;
     }
 
     // Update is called once per frame
     void Update() {
         if (DA.ReachedCurrentTarget()) {
             if (headingToIndex == path.Length - 1) {
-                PF.ReachedTarget();
+                if (PF != null)
+                    PF.ReachedTarget();
                 DestroyAndRespawnAtRandomWaypoint();
                 return;
             }
@@ -137,14 +148,19 @@ public class NavigationAgent : MonoBehaviour {
         var lc = TCA.GetLaneConfiguration(fromWp, toWp);
 
         Vector3 turnDirection;
-        DA.SetLane(DetermineLane(lc, direction, out turnDirection));
+        
+        // If there are no multiple options 
+        // it should keep the lane it's already on
+
+        var lane = DetermineLane(lc, direction, out turnDirection);
+        DA.SetLane(lane);
 
         var nextLane = 0;
         if (turnDirection == Vector3.left) {
-            nextLane = -1;
+            nextLane = -1 * lane;
         }
         else if (turnDirection == Vector3.right) {
-            nextLane = 1;
+            nextLane = 1 * lane;
         }
         DA.SetNextTarget(toLoc, direction, nextLane);
     }
@@ -193,6 +209,7 @@ public class NavigationAgent : MonoBehaviour {
         var relativeDir = XVector3.AngleDir(direction, targetDir, Vector3.up);
 
         willTurn = relativeDir;
+
         return relativeDir == Vector3.left ? lc.LeftMost() : lc.RightMost();
     }
 }

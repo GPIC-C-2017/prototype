@@ -10,7 +10,7 @@ public class SpawnPoint : MonoBehaviour {
 
     public GameObject VehiclePrefab;
 
-    public static float GlobalRatio = 1f;
+    public static float GlobalRatio = 3f;
 
     private Waypoint wp;
     private Vector3 directionToNeighbour;
@@ -19,6 +19,8 @@ public class SpawnPoint : MonoBehaviour {
     private Waypoint[] endWaypoints;
     private float spawnDelay;
     private int vehiclesSpawned;
+
+    public int SpawnAtLane = 1;
 
     private TrafficControllerAgent TCA;
     private GameObject trafficContainer;
@@ -94,11 +96,13 @@ public class SpawnPoint : MonoBehaviour {
     }
 
     private void ForceSpawnVehicle() {
-        var vehicle = Instantiate(VehiclePrefab, laneLocs[0], Quaternion.identity, trafficContainer.transform);
+        var vehicle = Instantiate(VehiclePrefab, laneLocs[SpawnAtLane - 1], Quaternion.identity, trafficContainer.transform);
         var navigationAgent = vehicle.GetComponent<NavigationAgent>();
+        var drivingAgent = vehicle.GetComponent<DrivingAgent>();
         navigationAgent.TCA = TCA;
         navigationAgent.Destination = RandomWaypointBesideCurrent();
         navigationAgent.StartingPoint = wp;
+        drivingAgent.SetLane(SpawnAtLane);
         vehicle.transform.LookAt(wp.Neighbours[0].transform);
         vehiclesSpawned++;
         lastSpawnedVehicle = vehicle;
