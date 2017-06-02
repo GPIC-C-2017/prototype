@@ -348,7 +348,7 @@ public class DrivingAgent : MonoBehaviour {
 	    }
 
 
-	    if (nextLane != 0)
+	    if (laneAtNextJunction != 0)
 	        laneAdjustedTargetPosition += laneAtNextJunction * currentTargetDirection 
 	                                      * GetLaneOffset (Mathf.Abs(laneAtNextJunction));
 		
