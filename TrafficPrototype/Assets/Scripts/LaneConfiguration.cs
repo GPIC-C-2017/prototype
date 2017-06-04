@@ -29,7 +29,12 @@ public class LaneConfiguration : MonoBehaviour {
 	}
 
 	public bool LeftLaneOpen(int index) {
-		return LeftLanes[index] == LaneEnabled;
+		try {
+			return LeftLanes[index] == LaneEnabled;
+		}
+		catch (IndexOutOfRangeException e) {
+			return false;
+		}
 	}
 	
 	public bool RightLaneOpen(int index) {
