@@ -8,6 +8,8 @@ public class LoadBalancing : MonoBehaviour {
 	public float CloseAfterSeconds;
 	public float ReopenAfterSeconds;
 
+    public bool CloseLanes;
+
 	public GameObject Obstacle;
 
 	private Waypoint[] previousNeighbours;
@@ -25,14 +27,16 @@ public class LoadBalancing : MonoBehaviour {
 
 	IEnumerator CloseAfterTime() {
 		yield return new WaitForSeconds(CloseAfterSeconds);
-		CloseWaypoint();
+        if (CloseLanes)
+    		CloseWaypoint();
 		Obstacle.SetActive(true);
 		StartCoroutine(ReopenAfterTime());
 	}
 
 	IEnumerator ReopenAfterTime() {
 		yield return new WaitForSeconds(ReopenAfterSeconds);
-		OpenWaypoint();
+        if (CloseLanes)
+            OpenWaypoint();
 		Obstacle.SetActive(false);
 		StartCoroutine(CloseAfterTime());
 	}
