@@ -13,6 +13,7 @@ public class CloseAndReopenLanes : MonoBehaviour {
 	public int lanesToClose;
 	public float seconds;
 	public LanesChoice startFrom;
+	public bool doClose;
 	
 
 	public GameObject obstacle;
@@ -33,7 +34,8 @@ public class CloseAndReopenLanes : MonoBehaviour {
 	}
 
 	IEnumerator WaitAndActivateObstacle() {
-		yield return new WaitForSeconds(seconds / 3);
+		//yield return new WaitForSeconds(seconds / 3);
+		yield return new WaitForSeconds(0.00001f);
 		obstacle.SetActive(true);
 
 	}
@@ -47,6 +49,8 @@ public class CloseAndReopenLanes : MonoBehaviour {
 	}
 
 	private void CloseLanes() {
+		if (!doClose)
+			return;
 		SetLanes ('0');
 		Debug.Log("Lanes closed.");
 	}
