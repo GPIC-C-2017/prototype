@@ -16,6 +16,8 @@ public class NavigationAgent : MonoBehaviour {
     public Waypoint StartingPoint;
     public Waypoint Destination;
 
+    public bool respawnAtRandomWaypoint = true;
+
     public TrafficControllerAgent TCA;
     private DrivingAgent DA;
     private PerformanceMeasurer PF;
@@ -111,7 +113,8 @@ public class NavigationAgent : MonoBehaviour {
     }
 
     public void DestroyAndRespawnAtRandomWaypoint() {
-        RequestSpawnFromWaypoint(GetRandomSpawnPoint());
+        if (respawnAtRandomWaypoint)
+            RequestSpawnFromWaypoint(GetRandomSpawnPoint());
         Destroy(gameObject);
     }
 
