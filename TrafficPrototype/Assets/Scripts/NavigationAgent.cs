@@ -148,21 +148,31 @@ public class NavigationAgent : MonoBehaviour {
         var lc = TCA.GetLaneConfiguration(fromWp, toWp);
 
         Vector3 turnDirection;
-        
-        // If there are no multiple options 
-        // it should keep the lane it's already on
+		var currentLane = DA.CurrentLane;
 
-        var lane = DetermineLane(lc, direction, out turnDirection);
-        DA.SetLane(lane);
+		int lane;
 
-        var nextLane = 0;
-        if (turnDirection == Vector3.left) {
-            nextLane = -1 * lane;
+		lane = DetermineLane (lc, direction, out turnDirection);
+
+		var nextLane = 0;
+		if (turnDirection == Vector3.left) {
+			nextLane = -1 * lane;
+		} else if (turnDirection == Vector3.right) {
+			nextLane = 1 * lane;
+		}
+
+        if (toWp.Neighbours.Length <= 3) {
+            // There are no options ahead. Just a bend. 
+            // See if I can keep the current lane.
+
+            lane = lc.LeftLaneOpen(currentLane) ? currentLane : lc.RightMost();
+            nextLane = 0;
+
         }
-        else if (turnDirection == Vector3.right) {
-            nextLane = 1 * lane;
-        }
+
+		DA.SetLane(lane);
         DA.SetNextTarget(toLoc, direction, nextLane);
+
     }
 
     public Waypoint ClosestWaypoint() {
