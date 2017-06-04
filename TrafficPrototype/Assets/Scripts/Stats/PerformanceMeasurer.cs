@@ -10,7 +10,8 @@ public class PerformanceMeasurer : MonoBehaviour {
     public Text CarsPerMinute;
     public Text AverageTimeOnTheRoad;
     public Text TimeElapsed;
-    
+    public Text AverageSpeed;
+
     private int reachedTarget;
     private float timePassed; // total in seconds, * 60 for minutes
     
@@ -19,6 +20,7 @@ public class PerformanceMeasurer : MonoBehaviour {
         TotalCars.text = 0.ToString();
 
         StartCoroutine(UpdateAverageTimeOnTheRoad());
+        StartCoroutine(UpdateAverageSpeed());
     }
 
     // Update is called once per frame
@@ -41,7 +43,15 @@ public class PerformanceMeasurer : MonoBehaviour {
         while (true) {
             yield return new WaitForSeconds(2f);
             var time = GetAverageTimeOnTheRoad();
-            AverageTimeOnTheRoad.text = time.ToString("00.00") + "s";
+            AverageTimeOnTheRoad.text = time.ToString("00.00") + " s";
+        }
+    }
+
+    IEnumerator UpdateAverageSpeed() {
+        while (true) {
+            yield return new WaitForSeconds(2f);
+            var speed = GetAverageSpeed();
+            AverageSpeed.text = speed.ToString("00.00") + " mph";
         }
     }
 
@@ -52,6 +62,21 @@ public class PerformanceMeasurer : MonoBehaviour {
             total += a.JourneySecondsElapsed().Seconds;
         }
         total /= NAs.Length;
+        return total;
+    }
+
+    private double GetAverageSpeed()
+    {
+        VehicleAgent[] VAs = FindObjectsOfType<VehicleAgent>();
+        double total = 0f;
+        foreach (VehicleAgent a in VAs) {
+            try {
+                total += a.GetCurrentSpeed();
+            } catch (System.NullReferenceException e) {
+                total += 0f;
+            }
+        }
+        total /= VAs.Length;
         return total;
     }
 }
