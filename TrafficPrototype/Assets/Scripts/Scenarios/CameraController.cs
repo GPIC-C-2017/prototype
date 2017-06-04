@@ -5,6 +5,8 @@ public class CameraController : MonoBehaviour {
     public Camera[] cameras;
     private int currentCameraIndex;
 
+    public float changeEverySeconds = 0f;
+
     // Use this for initialization
     void Start() {
         currentCameraIndex = 0;
@@ -19,6 +21,9 @@ public class CameraController : MonoBehaviour {
             cameras[0].gameObject.SetActive(true);
             Debug.Log("Camera with name: " + cameras[0].GetComponent<Camera>().name + ", is now enabled");
         }
+
+        if (changeEverySeconds > 0f)
+            StartCoroutine(WaitAndChange());
     }
 
     // Update is called once per frame
@@ -27,19 +32,33 @@ public class CameraController : MonoBehaviour {
         //Set the camera at the current index to inactive, and set the next one in the array to active
         //When we reach the end of the camera array, move back to the beginning or the array.
         if (Input.GetKeyDown(KeyCode.C)) {
-            currentCameraIndex++;
-            Debug.Log("C button has been pressed. Switching to the next camera");
-            if (currentCameraIndex < cameras.Length) {
-                cameras[currentCameraIndex - 1].gameObject.SetActive(false);
-                cameras[currentCameraIndex].gameObject.SetActive(true);
-                Debug.Log("Camera with name: " + cameras[currentCameraIndex].GetComponent<Camera>().name + ", is now enabled");
-            }
-            else {
-                cameras[currentCameraIndex - 1].gameObject.SetActive(false);
-                currentCameraIndex = 0;
-                cameras[currentCameraIndex].gameObject.SetActive(true);
-                Debug.Log("Camera with name: " + cameras[currentCameraIndex].GetComponent<Camera>().name + ", is now enabled");
-            }
+            ChangeCamera();
         }
+    }
+
+    IEnumerator WaitAndChange() {
+        while (true) {
+            yield return new WaitForSeconds(changeEverySeconds);
+            ChangeCamera();
+        }
+    }
+
+    void ChangeCamera() {
+        currentCameraIndex++;
+        Debug.Log("C button has been pressed. Switching to the next camera");
+        if (currentCameraIndex < cameras.Length)
+        {
+            cameras[currentCameraIndex - 1].gameObject.SetActive(false);
+            cameras[currentCameraIndex].gameObject.SetActive(true);
+            Debug.Log("Camera with name: " + cameras[currentCameraIndex].GetComponent<Camera>().name + ", is now enabled");
+        }
+        else
+        {
+            cameras[currentCameraIndex - 1].gameObject.SetActive(false);
+            currentCameraIndex = 0;
+            cameras[currentCameraIndex].gameObject.SetActive(true);
+            Debug.Log("Camera with name: " + cameras[currentCameraIndex].GetComponent<Camera>().name + ", is now enabled");
+        }
+
     }
 }
