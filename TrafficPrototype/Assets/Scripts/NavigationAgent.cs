@@ -161,7 +161,7 @@ public class NavigationAgent : MonoBehaviour {
 			nextLane = 1 * lane;
 		}
 
-        if (toWp.Neighbours.Length <= 3) {
+        if (toWp.Neighbours.Length <= 3 && lc != null) {
             // There are no options ahead. Just a bend. 
             // See if I can keep the current lane.
 
