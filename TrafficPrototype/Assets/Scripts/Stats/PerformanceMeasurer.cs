@@ -5,10 +5,11 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class PerformanceMeasurer : MonoBehaviour {
-
+    
     public Text TotalCars;
     public Text CarsPerMinute;
     public Text AverageTimeOnTheRoad;
+    public Text TimeElapsed;
     
     private int reachedTarget;
     private float timePassed; // total in seconds, * 60 for minutes
@@ -23,6 +24,7 @@ public class PerformanceMeasurer : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         timePassed += Time.deltaTime;
+        TimeElapsed.text = timePassed.ToString("00.00") + "s";
     }
 
     public void ReachedTarget() {
@@ -39,7 +41,7 @@ public class PerformanceMeasurer : MonoBehaviour {
         while (true) {
             yield return new WaitForSeconds(2f);
             var time = GetAverageTimeOnTheRoad();
-            AverageTimeOnTheRoad.text = time.ToString("00.00") + " seconds";
+            AverageTimeOnTheRoad.text = time.ToString("00.00") + "s";
         }
     }
 
