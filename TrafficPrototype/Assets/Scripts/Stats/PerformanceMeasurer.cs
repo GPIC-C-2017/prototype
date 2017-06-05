@@ -43,7 +43,7 @@ public class PerformanceMeasurer : MonoBehaviour {
         while (true) {
             yield return new WaitForSeconds(2f);
             var time = GetAverageTimeOnTheRoad();
-            AverageTimeOnTheRoad.text = time.ToString("00.00") + " s";
+            AverageTimeOnTheRoad.text = time.ToString("00.00") + "s";
         }
     }
 

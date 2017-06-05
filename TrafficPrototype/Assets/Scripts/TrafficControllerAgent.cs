@@ -49,6 +49,19 @@ public class TrafficControllerAgent : MonoBehaviour {
         spawnPointsCache = spawnpoints.ToArray();
     }
 
+    public void ForceUpdateEndWaypoint() {
+        var _endWaypoints = new List<Waypoint>();
+        foreach (Transform child in WaypointContainer.transform) {
+            var wp = child.GetComponent<Waypoint>();
+            if (wp != null) {
+                if (wp.RoadEnd) {
+                    _endWaypoints.Add(wp);
+                }
+            }
+        }
+        endWaypoints = _endWaypoints.ToArray();
+    }
+
     public Waypoint[] GetEndWaypoints() {
         return endWaypoints;
     }

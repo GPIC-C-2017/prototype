@@ -109,7 +109,9 @@ public class NavigationAgent : MonoBehaviour {
 
     private void RequestSpawnFromWaypoint(Waypoint w) {
         SpawnPoint s = w.GetComponent<SpawnPoint>();
-        s.SpawnVehicle();
+        
+        if (s.EnableSpawning && s.RespawnAfterReachDest)
+            s.SpawnVehicle();
     }
 
     public void DestroyAndRespawnAtRandomWaypoint() {

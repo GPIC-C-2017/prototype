@@ -6,6 +6,7 @@ using UnityEngine;
 public class SpawnPoint : MonoBehaviour {
     public int SpawnsPerMinute;
     public bool EnableSpawning;
+    public bool RespawnAfterReachDest = true;
     public int MaxVehiclesSpawned;
 
     public GameObject VehiclePrefab;
@@ -16,7 +17,6 @@ public class SpawnPoint : MonoBehaviour {
     private Vector3 directionToNeighbour;
     private LaneConfiguration lc;
     private Vector3[] laneLocs;
-    private Waypoint[] endWaypoints;
     private float spawnDelay;
     private int vehiclesSpawned;
 
@@ -39,13 +39,10 @@ public class SpawnPoint : MonoBehaviour {
         directionToNeighbour = XVector3.Direction(wp.transform.position, wp.Neighbours[0].transform.position);
         lc = TCA.GetLaneConfiguration(wp, wp.Neighbours[0]);
 
-        endWaypoints = TCA.GetEndWaypoints();
-
         InitLanes();
 
         StartCoroutine(WaitSpawn());
     }
-
 
     private void InitLanes() {
         var lanes = new List<Vector3>();
@@ -109,6 +106,7 @@ public class SpawnPoint : MonoBehaviour {
     }
 
     private Waypoint RandomWaypointBesideCurrent() {
+        var endWaypoints = TCA.GetEndWaypoints();
         var random = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
         while (wp == random) {
             random = endWaypoints[Random.Range(0, endWaypoints.Length - 1)];
